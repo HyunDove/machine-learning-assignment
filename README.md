@@ -237,5 +237,5 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 시각화 이미지 생성 (`reports/figures/` — 10종)
 - [x] 과제 보고서 작성 (`reports/AI개발_수행내역서.md`)
 - [x] Streamlit 웹앱 (`streamlit_app.py`)
-- [ ] Flask API 테스트
+- [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)
 - [ ] HWP 보고서 최종 제출
