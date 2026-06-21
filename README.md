@@ -11,10 +11,10 @@
 |---|---|
 | 🎯 **주제** | 대출 금리 예측 모델 구현 |
 | 🔍 **문제 유형** | 회귀 (`loan_int_rate`) + 분류 (`loan_status`) |
-| 📦 **라이브러리** | Python · scikit-learn · Flask · Pydantic |
+| 📦 **라이브러리** | Python · scikit-learn · Flask · Streamlit · Pydantic |
 | 📊 **데이터** | Kaggle — Credit Risk Dataset (32,581행, 12컬럼) |
 | 📏 **평가지표** | RMSE, MAE, R² |
-| 🚀 **결과물** | 웹 API + 시각화 + HWP 보고서 |
+| 🚀 **결과물** | Streamlit 웹앱 + Flask API + Jupyter 노트북 + 시각화 보고서 |
 
 ---
 
@@ -24,11 +24,10 @@
 ml_project/
 │
 ├── 📄 credit_risk_dataset.csv      # 원본 데이터 (Kaggle)
-├── 📄 ml_assignment_notes.md       # 과제 노트
-├── 📄 PROJECT_LOG.md               # 진행 기록
+├── 📄 streamlit_app.py             # Streamlit 웹앱
+├── 📄 requirements.txt             # Streamlit Cloud 의존성
 │
 ├── 📂 data/
-│   ├── raw/                        # 원본 CSV
 │   └── processed/                  # 전처리 완료 CSV
 │
 ├── 📂 ml/                          # ML 파이프라인
@@ -36,15 +35,15 @@ ml_project/
 │   ├── train.py                    # 모델 학습 (회귀 + 분류)
 │   └── evaluate.py                 # RMSE, MAE, R² 평가
 │
-├── 📂 models/                      # 학습된 모델 파일 (.pkl)
+├── 📂 models/                      # 학습된 모델 파일 (.pkl, gitignore)
 │   ├── loan_rate_model.pkl         # GradientBoostingRegressor
 │   └── loan_status_model.pkl       # RandomForestClassifier
 │
-├── 📂 notebooks/                   # Jupyter 노트북
-│   ├── 01_eda.ipynb                # EDA (탐색적 데이터 분석)
-│   ├── 02_preprocessing.ipynb      # 전처리 확인
-│   ├── 03_modeling.ipynb           # 모델 학습
-│   └── 04_evaluation.ipynb         # 평가 및 시각화
+├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
+│   ├── 01_eda.ipynb                # EDA — 결측치·분포·상관관계 탐색
+│   ├── 02_preprocessing.ipynb      # 전처리 단계별 확인 및 CSV 저장
+│   ├── 03_modeling.ipynb           # 4개 모델 비교 학습 + pkl 저장
+│   └── 04_evaluation.ipynb         # 잔차·피처 중요도·ROC 평가
 │
 ├── 📂 backend/                     # Flask REST API
 │   ├── main.py                     # 앱 엔트리포인트
@@ -55,7 +54,9 @@ ml_project/
 │       ├── models/schemas.py       # Pydantic Request/Response
 │       └── utils/model_loader.py   # 모델 로더
 │
-└── 📂 reports/figures/             # 시각화 결과 이미지
+└── 📂 reports/
+    ├── AI개발_수행내역서.md         # 과제 보고서 (한국어)
+    └── figures/                    # 시각화 이미지 10종
 ```
 
 ---
@@ -128,7 +129,7 @@ R² **0.90** — 모델이 대출 금리 분산의 90%를 설명합니다.
 ### 1️⃣ 의존성 설치
 
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 pip install jupyter
 ```
 
@@ -145,14 +146,30 @@ python ml/train.py
 python ml/evaluate.py
 ```
 
-### 3️⃣ Flask API 실행
+### 3️⃣ Jupyter 노트북 실행 (EDA → 전처리 → 학습 → 평가)
+
+```bash
+jupyter notebook notebooks/
+```
+
+> `01_eda.ipynb` → `02_preprocessing.ipynb` → `03_modeling.ipynb` → `04_evaluation.ipynb` 순서로 실행
+
+### 4️⃣ Streamlit 웹앱 실행
+
+```bash
+streamlit run streamlit_app.py
+```
+
+> 모델 파일(.pkl)이 없으면 앱 실행 시 자동으로 학습합니다.
+
+### 5️⃣ Flask API 실행
 
 ```bash
 cd backend
 flask run
 ```
 
-### 4️⃣ API 요청 예시
+### 6️⃣ API 요청 예시
 
 ```bash
 curl -X POST http://localhost:5000/api/predictions/ \
@@ -186,17 +203,22 @@ curl -X POST http://localhost:5000/api/predictions/ \
 ## 🗺️ 전체 파이프라인
 
 ```
-📥 Kaggle CSV
+📥 Kaggle CSV (credit_risk_dataset.csv)
      ↓
-🔧 전처리 (결측치 제거 · 이상치 필터 · LabelEncoding)
+🔍 EDA (01_eda.ipynb) — 분포·결측치·상관관계 탐색
      ↓
-🤖 모델 학습 (GBR 회귀 + RF 분류)
+🔧 전처리 (02_preprocessing.ipynb / ml/preprocessing.py)
+   결측치 제거 · 이상치 필터 · LabelEncoding → CSV 저장
      ↓
-📏 성능 평가 (RMSE / MAE / R²)
+🤖 모델 학습 (03_modeling.ipynb / ml/train.py)
+   GBR 회귀 + RF 분류 → .pkl 저장
      ↓
-🌐 Flask REST API
+📏 성능 평가 (04_evaluation.ipynb / ml/evaluate.py)
+   RMSE / MAE / R² / AUC-ROC
      ↓
-📊 시각화 (예측값 분포 · 피처 중요도)
+         ┌──────────────────┬─────────────────┐
+    🌐 Flask API        💻 Streamlit 웹앱   📊 시각화 보고서
+   (backend/)         (streamlit_app.py)  (reports/figures/)
 ```
 
 ---
@@ -208,7 +230,12 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 데이터 전처리 (`ml/preprocessing.py`)
 - [x] 모델 학습 (`ml/train.py`)
 - [x] 성능 평가 (`ml/evaluate.py`) — R² 0.9041
-- [ ] EDA Jupyter 노트북 (`notebooks/01_eda.ipynb`)
-- [ ] Flask API 완성 및 테스트
-- [ ] 시각화 구현
-- [ ] HWP 보고서 작성
+- [x] EDA Jupyter 노트북 (`notebooks/01_eda.ipynb`)
+- [x] 전처리 노트북 (`notebooks/02_preprocessing.ipynb`)
+- [x] 모델 학습 노트북 (`notebooks/03_modeling.ipynb`)
+- [x] 평가 노트북 (`notebooks/04_evaluation.ipynb`)
+- [x] 시각화 이미지 생성 (`reports/figures/` — 10종)
+- [x] 과제 보고서 작성 (`reports/AI개발_수행내역서.md`)
+- [x] Streamlit 웹앱 (`streamlit_app.py`)
+- [ ] Flask API 테스트
+- [ ] HWP 보고서 최종 제출
