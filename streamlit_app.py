@@ -189,6 +189,9 @@ with st.sidebar:
 
 # ── 메인 ─────────────────────────────────────────────────────────────────────
 
+# 앱 시작 시 모델 + 전처리 CSV 확보 (캐시되어 1회만 실행)
+load_models()
+
 st.title("대출 금리 예측 시스템")
 st.caption("Credit Risk Dataset 기반 머신러닝 모델 · GradientBoostingRegressor + RandomForestClassifier")
 st.divider()
