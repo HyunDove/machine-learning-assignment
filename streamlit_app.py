@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import koreanize_matplotlib  # noqa: F401 — 한글 폰트 자동 적용 (Linux/Cloud 포함)
+import matplotlib.font_manager as fm
 import streamlit as st
 
 ROOT              = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +13,15 @@ RATE_MODEL_PATH   = os.path.join(MODEL_DIR, "loan_rate_model.pkl")
 STATUS_MODEL_PATH = os.path.join(MODEL_DIR, "loan_status_model.pkl")
 PROCESSED_PATH    = os.path.join(ROOT, "data", "processed", "credit_risk_cleaned.csv")
 
-plt.rcParams["axes.unicode_minus"] = False
+def _set_korean_font():
+    nanum = [f for f in fm.findSystemFonts() if "Nanum" in f or "nanum" in f]
+    if nanum:
+        plt.rcParams["font.family"] = fm.FontProperties(fname=nanum[0]).get_name()
+    elif "Malgun Gothic" in [f.name for f in fm.fontManager.ttflist]:
+        plt.rcParams["font.family"] = "Malgun Gothic"
+    plt.rcParams["axes.unicode_minus"] = False
+
+_set_korean_font()
 
 ENCODINGS = {
     "person_home_ownership": {"MORTGAGE": 0, "OTHER": 1, "OWN": 2, "RENT": 3},
