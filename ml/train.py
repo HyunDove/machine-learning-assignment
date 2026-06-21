@@ -35,7 +35,7 @@ def train():
     y_cls = df[STATUS_TARGET]
     X_train_c, _, y_train_c, _ = train_test_split(X_cls, y_cls, test_size=0.2, random_state=42)
 
-    classifier = RandomForestClassifier(n_estimators=200, random_state=42)
+    classifier = RandomForestClassifier(n_estimators=50, random_state=42)
     classifier.fit(X_train_c, y_train_c)
     joblib.dump(classifier, os.path.join(MODEL_DIR, "loan_status_model.pkl"))
 

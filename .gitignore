@@ -14,8 +14,7 @@ build/
 .env
 .env.local
 
-# 모델 파일
-models/*.pkl
+# 모델 파일 (git에서 추적하여 Streamlit Cloud 재시작 시 재학습 방지)
 models/*.joblib
 
 # 데이터
