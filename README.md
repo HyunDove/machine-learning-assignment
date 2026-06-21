@@ -11,10 +11,22 @@
 |---|---|
 | 🎯 **주제** | 대출 금리 예측 모델 구현 |
 | 🔍 **문제 유형** | 회귀 (`loan_int_rate`) + 분류 (`loan_status`) |
-| 📦 **라이브러리** | Python · scikit-learn · Flask · Streamlit · Pydantic |
+| 📦 **라이브러리** | Python · scikit-learn 1.4.0 · Flask · Streamlit · Pydantic |
 | 📊 **데이터** | Kaggle — Credit Risk Dataset (32,581행, 12컬럼) |
 | 📏 **평가지표** | RMSE, MAE, R² |
-| 🚀 **결과물** | Streamlit 웹앱 + Flask API + Jupyter 노트북 + 시각화 보고서 |
+| 🚀 **결과물** | Streamlit 웹앱 (Cloud 배포) + Flask REST API + Jupyter 노트북 4종 |
+
+---
+
+## 🌐 Streamlit 웹앱
+
+**탭 구성:**
+
+| 탭 | 내용 |
+|---|---|
+| 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 + 부도 확률 실시간 출력 |
+| 📊 **모델 성능** | 4개 회귀 모델 RMSE·MAE·R² 비교 표 + 막대 그래프 |
+| 📈 **데이터 인사이트** | 등급·나이·소득·대출금액 등 변수별 평균 금리 시각화 |
 
 ---
 
@@ -24,20 +36,22 @@
 ml_project/
 │
 ├── 📄 credit_risk_dataset.csv      # 원본 데이터 (Kaggle)
-├── 📄 streamlit_app.py             # Streamlit 웹앱
-├── 📄 requirements.txt             # Streamlit Cloud 의존성
+├── 📄 streamlit_app.py             # Streamlit 웹앱 (3탭 구성)
+├── 📄 requirements.txt             # Python 의존성 (scikit-learn==1.4.0 고정)
+├── 📄 packages.txt                 # Streamlit Cloud OS 패키지 (fonts-nanum 한글 폰트)
 │
 ├── 📂 data/
-│   └── processed/                  # 전처리 완료 CSV
+│   └── processed/
+│       └── credit_risk_cleaned.csv # 전처리 완료 CSV (git 추적)
 │
 ├── 📂 ml/                          # ML 파이프라인
 │   ├── preprocessing.py            # 결측치·이상치 처리, LabelEncoding
 │   ├── train.py                    # 모델 학습 (회귀 + 분류)
 │   └── evaluate.py                 # RMSE, MAE, R² 평가
 │
-├── 📂 models/                      # 학습된 모델 파일 (.pkl, gitignore)
-│   ├── loan_rate_model.pkl         # GradientBoostingRegressor
-│   └── loan_status_model.pkl       # RandomForestClassifier
+├── 📂 models/                      # 학습된 모델 파일 (git 추적)
+│   ├── loan_rate_model.pkl         # GradientBoostingRegressor (363KB)
+│   └── loan_status_model.pkl       # RandomForestClassifier n_estimators=50 (17MB)
 │
 ├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
 │   ├── 01_eda.ipynb                # EDA — 결측치·분포·상관관계 탐색
@@ -56,7 +70,7 @@ ml_project/
 │
 └── 📂 reports/
     ├── AI개발_수행내역서.md         # 과제 보고서 (한국어)
-    └── figures/                    # 시각화 이미지 10종
+    └── figures/                    # 시각화 이미지 13종
 ```
 
 ---
@@ -94,19 +108,22 @@ ml_project/
 
 ### 🔵 회귀 — `loan_int_rate` 예측
 
-| 모델 | 선택 이유 |
-|---|---|
-| ✅ **GradientBoostingRegressor** | 비선형 관계 포착, 피처 중요도 제공 |
-| RandomForestRegressor | 앙상블, 이상치 강건 (비교 기준) |
-| Ridge / Lasso | 선형 베이스라인 |
+| 모델 | R² | RMSE | MAE |
+|---|---|---|---|
+| 선형 회귀 | 0.8702 | 1.1725 | 0.9139 |
+| 릿지 회귀 | 0.8702 | 1.1725 | 0.9140 |
+| ✅ **GradientBoostingRegressor** | **0.9041** | **1.0079** | **0.7899** |
+| RandomForestRegressor | 0.9062 | 0.9967 | 0.7735 |
+
+> 웹앱 배포 기준 최종 채택: **GradientBoostingRegressor**
 
 ### 🟠 분류 — `loan_status` 예측
 
-| 모델 | 선택 이유 |
-|---|---|
-| ✅ **RandomForestClassifier** | 불균형 데이터에 강건, 해석 용이 |
-| GradientBoostingClassifier | 높은 정밀도 (비교 기준) |
-| LogisticRegression | 선형 베이스라인 |
+| 모델 | AUC-ROC | Precision(부도) | Recall(부도) | F1(부도) |
+|---|---|---|---|---|
+| ✅ **RandomForestClassifier** | **0.9397** | 0.98 | 0.71 | 0.83 |
+
+> `n_estimators=50` 으로 경량화 (200개 → 67MB에서 50개 → **17MB**, AUC 성능 차이 미미)
 
 ---
 
@@ -146,7 +163,10 @@ python ml/train.py
 python ml/evaluate.py
 ```
 
-### 3️⃣ Jupyter 노트북 실행 (EDA → 전처리 → 학습 → 평가)
+> `models/*.pkl`과 `data/processed/*.csv`는 git에 포함되어 있으므로  
+> Streamlit 앱 실행 시 별도 학습 없이 바로 로드됩니다.
+
+### 3️⃣ Jupyter 노트북 실행
 
 ```bash
 jupyter notebook notebooks/
@@ -159,8 +179,6 @@ jupyter notebook notebooks/
 ```bash
 streamlit run streamlit_app.py
 ```
-
-> 모델 파일(.pkl)이 없으면 앱 실행 시 자동으로 학습합니다.
 
 ### 5️⃣ Flask API 실행
 
@@ -219,7 +237,21 @@ curl -X POST http://localhost:5000/api/predictions/ \
          ┌──────────────────┬─────────────────┐
     🌐 Flask API        💻 Streamlit 웹앱   📊 시각화 보고서
    (backend/)         (streamlit_app.py)  (reports/figures/)
+                      ☁️ Streamlit Cloud 배포
 ```
+
+---
+
+## 🛠️ Streamlit Cloud 배포 설정
+
+| 파일 | 역할 |
+|---|---|
+| `requirements.txt` | Python 패키지 (`scikit-learn==1.4.0` 고정 — pkl 역직렬화 버전 호환) |
+| `packages.txt` | OS 패키지 (`fonts-nanum` — 차트 한글 폰트) |
+| `models/*.pkl` | git 추적 — Cold Start 시 재학습 없이 즉시 로드 |
+| `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
+
+> `scikit-learn` 버전 불일치 시 `__pyx_unpickle AttributeError` 발생 → 반드시 버전 고정 필요
 
 ---
 
@@ -234,8 +266,9 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 전처리 노트북 (`notebooks/02_preprocessing.ipynb`)
 - [x] 모델 학습 노트북 (`notebooks/03_modeling.ipynb`)
 - [x] 평가 노트북 (`notebooks/04_evaluation.ipynb`)
-- [x] 시각화 이미지 생성 (`reports/figures/` — 10종)
+- [x] 시각화 이미지 생성 (`reports/figures/` — 13종)
 - [x] 과제 보고서 작성 (`reports/AI개발_수행내역서.md`)
-- [x] Streamlit 웹앱 (`streamlit_app.py`)
+- [x] Streamlit 웹앱 3탭 구성 (`streamlit_app.py`)
+- [x] Streamlit Cloud 배포 (한글 폰트·버전 호환 처리)
 - [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)
 - [ ] HWP 보고서 최종 제출
