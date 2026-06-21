@@ -273,6 +273,9 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 
 대출 부도 여부를 예측하는 RandomForestClassifier의 성능을 Confusion Matrix와 ROC 곡선으로 평가하였다.
 
+> **배포 최적화 — n_estimators 조정**
+> 초기 학습 시 n_estimators=200으로 설정하였으나, 직렬화(pkl) 파일 크기가 **67MB**에 달해 Streamlit Cloud 배포 환경에서 저장소 용량 초과 경고 및 cold start 지연 문제가 발생하였다. RandomForest는 트리 수가 50개 이상이면 성능이 수렴하는 특성이 있어 **n_estimators=50**으로 조정하였다. 그 결과 pkl 크기가 **17MB**로 감소하여 git 추적이 가능해졌고, AUC-ROC 성능에는 유의미한 변화가 없었다.
+
 | 지표 | 정상(0) | 부도(1) |
 |---|---|---|
 | Precision | 0.92 | 0.98 |
@@ -372,7 +375,8 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 | | `notebooks/02_preprocessing.ipynb` | 전처리 단계별 확인 및 저장 |
 | | `notebooks/03_modeling.ipynb` | 4개 모델 비교 학습 |
 | | `notebooks/04_evaluation.ipynb` | 잔차·ROC·피처 중요도 평가 |
-| 웹 서비스 | `streamlit_app.py` | Streamlit 인터랙티브 예측 웹앱 |
+| 웹 서비스 | `streamlit_app.py` | Streamlit 인터랙티브 예측 웹앱 (Streamlit Cloud 배포, 탭 3개: 금리 예측·모델 성능·데이터 인사이트) |
+| | `models/*.pkl` | 학습 모델 파일 git 추적 — RF 분류기 n_estimators 50으로 경량화(67MB→17MB) |
 | REST API | `backend/` | Flask API, 6개 테스트 케이스 전체 통과 |
 
 ### 라. 한계점 및 개선 방향
