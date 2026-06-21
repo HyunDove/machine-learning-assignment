@@ -33,35 +33,90 @@
 
 ---
 
-## 프로젝트 구조
+### 2026-06-20
+
+#### 1. ML 파이프라인 구현 완료
+- `ml/preprocessing.py`: 결측치 제거, 이상치 필터(나이>100·재직기간>60 제거), LabelEncoding → `data/processed/credit_risk_cleaned.csv` 저장
+- `ml/train.py`: GBR(회귀) + RF(분류) 학습 후 `models/*.pkl` 저장
+- `ml/evaluate.py`: RMSE / MAE / R² / AUC-ROC 출력
+
+#### 2. Jupyter 노트북 4종 작성
+- `01_eda.ipynb`: 분포·결측치·상관관계 탐색 (히트맵, 박스플롯, 등급별 금리)
+- `02_preprocessing.ipynb`: 단계별 전처리 확인 및 CSV 저장
+- `03_modeling.ipynb`: 4개 모델 비교 학습 + pkl 저장
+- `04_evaluation.ipynb`: 잔차분포·피처중요도·ROC 평가 + 시각화 13종
+
+#### 3. Flask REST API 완성
+- `POST /api/predictions/` 구현 및 테스트 6/6 PASS
+- Pydantic Request/Response 스키마, 글로벌 에러 핸들러
+
+#### 4. 과제 보고서 초안 작성
+- `reports/AI개발_수행내역서.md`: 수행 내역·모델 비교·평가 결과·구현 산출물 표
+
+---
+
+### 2026-06-21
+
+#### 1. Streamlit 웹앱 전면 개편 (3탭 구성)
+- **탭 1 🔮 금리 예측**: 사이드바 입력 → 예측 금리 + 부도 확률 카드 출력
+- **탭 2 📊 모델 성능**: 4개 회귀 모델 RMSE·MAE·R² 비교 표 + 막대 그래프
+- **탭 3 📈 데이터 인사이트**: 등급·나이·소득·대출금액·목적·부도이력별 평균 금리 시각화 (6개 차트)
+- `@st.cache_resource` / `@st.cache_data` 적용
+- 앱 시작 시 `load_models()` 호출 → 데이터 인사이트 탭 즉시 표시
+
+#### 2. Streamlit Cloud 배포 이슈 해결
+| 이슈 | 원인 | 해결 |
+|---|---|---|
+| `ImportError: matplotlib` | requirements.txt 누락 | `matplotlib>=3.8.0` 추가 |
+| 한글 깨짐 (matplotlib 차트) | Linux 환경, Malgun Gothic 없음 | `packages.txt`(fonts-nanum) + `fm.fontManager.addfont()` 직접 경로 |
+| `전처리된 데이터 파일이 없습니다` | CSV .gitignore 제외 + 버튼 클릭 시만 생성 | `.gitignore`에서 제거 + 앱 시작 시 `load_models()` |
+| `__pyx_unpickle AttributeError` | Streamlit Cloud scikit-learn 버전 불일치 | `scikit-learn==1.4.0` 고정 |
+| `loan_status_model.pkl` 67MB (GitHub 경고) | RF n_estimators=200 | n_estimators=200→50, pkl 17MB로 경량화 |
+
+#### 3. 파일 변경 내역
+- `streamlit_app.py`: 3탭 + 이모지 UI + 한글 폰트 함수 `_set_korean_font()` 추가
+- `requirements.txt`: `matplotlib>=3.8.0` 추가, `scikit-learn==1.4.0` 버전 고정
+- `packages.txt` (신규): `fonts-nanum` (Streamlit Cloud OS 패키지)
+- `.gitignore`: `models/*.pkl` 및 `data/processed/*.csv` git 추적으로 전환
+- `ml/train.py`: `RandomForestClassifier(n_estimators=50)` 변경 후 재학습
+- `reports/AI개발_수행내역서.md`: RF 경량화·Streamlit 3탭 내용 추가
+- `README.md`: 전면 최신화 (Streamlit Cloud 배포 섹션·배포 설정 표·진행현황 갱신)
+
+---
+
+## 프로젝트 구조 (최종)
 
 ```
 ml_project/
 │
 ├── credit_risk_dataset.csv          # 원본 데이터 (Kaggle)
+├── streamlit_app.py                 # Streamlit 웹앱 (3탭 구성)
+├── requirements.txt                 # Python 의존성 (scikit-learn==1.4.0 고정)
+├── packages.txt                     # Streamlit Cloud OS 패키지 (fonts-nanum)
 ├── ml_assignment_notes.md           # 과제 노트
 ├── PROJECT_LOG.md                   # 이 파일
+├── README.md                        # 프로젝트 소개
 ├── .gitignore
 │
 ├── data/
 │   ├── raw/                         # 원본 CSV 보관
-│   └── processed/                   # 전처리 후 CSV 저장
+│   └── processed/
+│       └── credit_risk_cleaned.csv  # 전처리 완료 CSV (git 추적)
 │
 ├── ml/                              # ML 파이프라인
 │   ├── preprocessing.py             # 결측치·이상치 처리, LabelEncoding
 │   ├── train.py                     # 모델 학습 (회귀 + 분류)
 │   └── evaluate.py                  # RMSE, MAE, R² 평가
 │
-├── models/                          # 학습된 모델 파일 (.pkl)
-│   ├── loan_rate_model.pkl          # GradientBoostingRegressor (생성 예정)
-│   └── loan_status_model.pkl        # RandomForestClassifier (생성 예정)
+├── models/                          # 학습된 모델 파일 (git 추적)
+│   ├── loan_rate_model.pkl          # GradientBoostingRegressor (363KB)
+│   └── loan_status_model.pkl        # RandomForestClassifier n_estimators=50 (17MB)
 │
 ├── notebooks/                       # Jupyter 노트북
-│   ├── README.txt                   # 실행 순서 안내
-│   ├── 01_eda.ipynb                 # EDA (생성 예정)
-│   ├── 02_preprocessing.ipynb       # 전처리 확인 (생성 예정)
-│   ├── 03_modeling.ipynb            # 모델 학습 (생성 예정)
-│   └── 04_evaluation.ipynb          # 평가 및 시각화 (생성 예정)
+│   ├── 01_eda.ipynb                 # EDA — 분포·결측치·상관관계
+│   ├── 02_preprocessing.ipynb       # 전처리 단계별 확인
+│   ├── 03_modeling.ipynb            # 4개 모델 비교 학습
+│   └── 04_evaluation.ipynb          # 잔차·피처중요도·ROC 평가
 │
 ├── backend/                         # Flask REST API
 │   ├── main.py                      # 앱 엔트리포인트
@@ -82,10 +137,11 @@ ml_project/
 │
 ├── backend/tests/
 │   ├── conftest.py
-│   └── test_prediction.py
+│   └── test_prediction.py           # 6/6 PASS
 │
 └── reports/
-    └── figures/                     # 시각화 이미지 저장
+    ├── AI개발_수행내역서.md          # 과제 보고서 (한국어)
+    └── figures/                     # 시각화 이미지 13종
 ```
 
 ---
@@ -158,13 +214,16 @@ ml_project/
 
 ## 남은 작업 (TODO)
 
-- [ ] `data/raw/`에 CSV 복사 후 `ml/preprocessing.py` 실행
-- [ ] `ml/train.py` 로 모델 학습
-- [ ] `ml/evaluate.py` 로 RMSE / MAE / R² 확인
-- [ ] Jupyter 노트북 EDA 작성 (`notebooks/01_eda.ipynb`)
-- [ ] Flask API 기동 및 테스트 (`cd backend && flask run`)
-- [ ] 시각화 구현 (예측값 분포, 피처 중요도 그래프)
-- [ ] HWP 보고서 작성
+- [x] 데이터 전처리 (`ml/preprocessing.py`)
+- [x] 모델 학습 (`ml/train.py`) — GBR R² 0.9041 / RF AUC 0.9397
+- [x] 성능 평가 (`ml/evaluate.py`)
+- [x] Jupyter 노트북 4종 (`notebooks/01~04`)
+- [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)
+- [x] 시각화 13종 (`reports/figures/`)
+- [x] Streamlit 웹앱 3탭 + Streamlit Cloud 배포
+- [x] 과제 보고서 (`reports/AI개발_수행내역서.md`)
+- [x] README 최신화
+- [ ] HWP 보고서 최종 제출 (수동)
 
 ---
 

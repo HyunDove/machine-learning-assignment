@@ -154,12 +154,57 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 
 ---
 
+## 모델 성능 결과
+
+### 회귀 — `loan_int_rate` 예측
+
+| 모델 | R² | RMSE | MAE |
+|---|---|---|---|
+| 선형 회귀 | 0.8702 | 1.1725 | 0.9139 |
+| 릿지 회귀 | 0.8702 | 1.1725 | 0.9140 |
+| ✅ **GradientBoostingRegressor** | **0.9041** | **1.0079** | **0.7899** |
+| RandomForestRegressor | 0.9062 | 0.9967 | 0.7735 |
+
+> 최종 채택: **GradientBoostingRegressor** — RF 대비 성능 근접하나 pkl 용량 363KB로 경량
+
+### 분류 — `loan_status` 예측
+
+| 모델 | AUC-ROC | Precision(부도) | Recall(부도) | F1(부도) |
+|---|---|---|---|---|
+| ✅ **RandomForestClassifier** | **0.9397** | 0.98 | 0.71 | 0.83 |
+
+> `n_estimators=50` 경량화 (200 → 67MB에서 50 → **17MB**, AUC 영향 미미)
+
+---
+
+## Streamlit Cloud 배포
+
+| 파일 | 역할 |
+|---|---|
+| `streamlit_app.py` | 3탭 웹앱 (금리예측 / 모델성능 / 데이터인사이트) |
+| `requirements.txt` | `scikit-learn==1.4.0` 고정 (pkl 역직렬화 버전 호환) |
+| `packages.txt` | `fonts-nanum` (Streamlit Cloud 한글 폰트 설치) |
+| `models/*.pkl` | git 추적 — Cold Start 재학습 불필요 |
+| `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
+
+**트러블슈팅 이력:**
+- `matplotlib` ImportError → `requirements.txt`에 추가
+- 한글 깨짐 → `packages.txt` + `fm.fontManager.addfont()` 직접 경로 지정
+- `__pyx_unpickle AttributeError` → scikit-learn 버전 `==1.4.0` 고정
+- `전처리된 데이터 파일이 없습니다` → CSV git 추적 + 앱 시작 시 `load_models()` 호출
+
+---
+
 ## TODO
 
 - [x] Kaggle 대출 데이터셋 선정 (Credit Risk Dataset)
-- [ ] EDA 진행 (결측치, 이상치, 상관관계)
-- [ ] 모델 선정 및 학습
-- [ ] RMSE, MAE, R² 평가
-- [ ] 웹 API 구축 (Flask 등)
-- [ ] 시각화 구현
-- [ ] HWP 보고서 작성
+- [x] EDA 진행 (결측치, 이상치, 상관관계) — `notebooks/01_eda.ipynb`
+- [x] 데이터 전처리 — `ml/preprocessing.py`
+- [x] 모델 선정 및 학습 — GBR(회귀) + RF(분류) — `ml/train.py`
+- [x] RMSE, MAE, R² 평가 — R² 0.9041 달성
+- [x] 웹 API 구축 (Flask) — `backend/` (테스트 6/6 PASS)
+- [x] Jupyter 노트북 4종 작성 (01~04)
+- [x] 시각화 구현 — `reports/figures/` 13종
+- [x] Streamlit 웹앱 3탭 구성 및 Streamlit Cloud 배포
+- [x] 과제 보고서 작성 — `reports/AI개발_수행내역서.md`
+- [ ] HWP 보고서 최종 제출
