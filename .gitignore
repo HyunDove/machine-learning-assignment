@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 환경변수
+.env
+.env.local
+
+# 모델 파일
+models/*.pkl
+models/*.joblib
+
+# 데이터
+data/raw/*.csv
+data/processed/*.csv
+
+# 보고서 산출물
+reports/figures/*.png
+reports/figures/*.jpg
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
