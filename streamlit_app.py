@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import koreanize_matplotlib  # noqa: F401 — 한글 폰트 자동 적용 (Linux/Cloud 포함)
 import streamlit as st
 
 ROOT              = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +13,6 @@ RATE_MODEL_PATH   = os.path.join(MODEL_DIR, "loan_rate_model.pkl")
 STATUS_MODEL_PATH = os.path.join(MODEL_DIR, "loan_status_model.pkl")
 PROCESSED_PATH    = os.path.join(ROOT, "data", "processed", "credit_risk_cleaned.csv")
 
-plt.rcParams["font.family"] = "Malgun Gothic"
 plt.rcParams["axes.unicode_minus"] = False
 
 ENCODINGS = {
@@ -98,8 +98,6 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .stApp { background-color: #ffffff; }
-    [data-testid="stSidebar"] { background-color: #f5f7fa; }
     [data-testid="stSidebar"] > div:first-child { padding-top: 1.2rem; }
 
     .result-box {
