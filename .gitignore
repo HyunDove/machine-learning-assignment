@@ -22,9 +22,7 @@ models/*.joblib
 data/raw/*.csv
 data/processed/*.csv
 
-# 보고서 산출물
-reports/figures/*.png
-reports/figures/*.jpg
+# 보고서 산출물 (이미지는 추적)
 
 # IDE
 .vscode/
