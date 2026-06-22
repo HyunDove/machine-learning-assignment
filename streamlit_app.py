@@ -353,11 +353,12 @@ with tab2:
     plt.close()
 
     st.divider()
-    st.subheader("🏆 최종 채택 모델 — GradientBoostingRegressor")
+    st.subheader("🏆 최종 채택 모델 — RandomForestRegressor")
+    st.caption("n_estimators=100 · max_depth=15 · max_features=sqrt · compress=3")
     m1, m2, m3 = st.columns(3)
-    m1.metric("📉 RMSE", "1.0079", delta="-0.1646 vs 선형회귀", delta_color="inverse")
-    m2.metric("📉 MAE",  "0.7899", delta="-0.1240 vs 선형회귀", delta_color="inverse")
-    m3.metric("📈 R²",   "0.9041", delta="+0.0339 vs 선형회귀")
+    m1.metric("📉 RMSE", "1.0235", delta="-0.1490 vs 선형회귀", delta_color="inverse")
+    m2.metric("📉 MAE",  "0.7941", delta="-0.1198 vs 선형회귀", delta_color="inverse")
+    m3.metric("📈 R²",   "0.9011", delta="+0.0309 vs 선형회귀")
     st.caption("🎯 분류 모델(RandomForestClassifier) AUC-ROC: **0.9397**")
 
 
