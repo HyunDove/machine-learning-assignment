@@ -118,13 +118,11 @@ st.set_page_config(
     page_title="💳 대출 금리 예측",
     page_icon="💳",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown("""
 <style>
-    [data-testid="stSidebar"] > div:first-child { padding-top: 1.2rem; }
-
     .result-box {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 14px; padding: 24px 28px;
@@ -166,58 +164,47 @@ st.markdown("""
 load_models()
 
 
-# ── 사이드바 입력 ─────────────────────────────────────────────────────────────
+# ── 예측 결과 모달 ────────────────────────────────────────────────────────────
 
-with st.sidebar:
-    st.markdown("## 💳 대출 신청 정보")
+@st.dialog("🔮 예측 결과", width="large")
+def show_result_modal(rate: float, prob: float, loan_grade: str):
+    is_safe = prob < 50
 
-    st.markdown('<p class="section-title">👤 신청자 정보</p>', unsafe_allow_html=True)
-    person_age    = st.slider("🎂 나이", 18, 100, 30)
-    person_income = st.number_input("💵 연 소득 (달러)", min_value=1_000, max_value=10_000_000,
-                                    value=60_000, step=1_000)
-    person_home_ownership = st.selectbox(
-        "🏠 주거 형태",
-        ["RENT", "OWN", "MORTGAGE", "OTHER"],
-        format_func=lambda x: {
-            "RENT": "🏠 임대", "OWN": "🏡 자가",
-            "MORTGAGE": "🏦 담보대출", "OTHER": "🏢 기타",
-        }[x],
-    )
-    person_emp_length = st.slider("💼 재직 기간 (년)", 0.0, 60.0, 3.0, step=0.5)
+    r1, r2 = st.columns(2)
+    with r1:
+        st.markdown(f"""
+        <div class="result-box">
+            <div class="result-label">📈 예측 대출 금리</div>
+            <div class="result-value">{rate}</div>
+            <div class="result-unit">% per annum</div>
+        </div>""", unsafe_allow_html=True)
+    with r2:
+        css   = "status-safe" if is_safe else "status-risk"
+        icon  = "✅" if is_safe else "⚠️"
+        label = "정상" if is_safe else "부도 위험"
+        st.markdown(f"""
+        <div class="{css}">
+            <div class="status-icon">{icon}</div>
+            <div class="result-label" style="color:white;opacity:.85;">🏦 부도 판정</div>
+            <div class="status-text">{label}</div>
+        </div>""", unsafe_allow_html=True)
 
-    st.markdown('<p class="section-title">💰 대출 정보</p>', unsafe_allow_html=True)
-    loan_amnt = st.number_input("💲 대출 금액 (달러)", min_value=500, max_value=500_000,
-                                 value=10_000, step=500)
-    loan_intent = st.selectbox(
-        "🎯 대출 목적",
-        ["PERSONAL", "EDUCATION", "MEDICAL", "VENTURE", "HOMEIMPROVEMENT", "DEBTCONSOLIDATION"],
-        format_func=lambda x: {
-            "PERSONAL": "👤 개인 용도", "EDUCATION": "🎓 교육",
-            "MEDICAL": "🏥 의료", "VENTURE": "🚀 창업",
-            "HOMEIMPROVEMENT": "🔨 주거 개선", "DEBTCONSOLIDATION": "🔄 부채 통합",
-        }[x],
-    )
-    loan_grade = st.select_slider(
-        "📊 대출 등급 (A=우량 / G=불량)",
-        options=["A", "B", "C", "D", "E", "F", "G"], value="C",
-    )
-    loan_status = st.radio(
-        "📋 현재 대출 상태", [0, 1],
-        format_func=lambda x: "✅ 정상 상환 중" if x == 0 else "⚠️ 연체 / 부도",
-        horizontal=True,
-    )
+    st.markdown(f"#### 📉 부도 확률: **{prob}%**")
+    st.progress(prob / 100)
 
-    st.markdown('<p class="section-title">📋 신용 정보</p>', unsafe_allow_html=True)
-    cb_person_default_on_file = st.radio(
-        "🚨 과거 부도 이력", ["N", "Y"],
-        format_func=lambda x: "✅ 없음" if x == "N" else "⚠️ 있음",
-        horizontal=True,
-    )
-    cb_person_cred_hist_length = st.slider("📅 신용 이력 기간 (년)", 0, 30, 5)
-
-    loan_percent_income = round(loan_amnt / person_income, 4) if person_income > 0 else 0.0
-    st.info(f"📊 소득 대비 대출 비율: **{loan_percent_income:.2%}**")
-    predict_btn = st.button("🔍 예측하기", type="primary", use_container_width=True)
+    grade_comment = {
+        "A": "🟢 최우량 등급 — 낮은 금리가 적용될 가능성이 높습니다.",
+        "B": "🟢 우량 등급 — 평균 이하의 금리를 기대할 수 있습니다.",
+        "C": "🟡 양호한 등급 — 평균 수준의 금리가 적용됩니다.",
+        "D": "🟡 보통 등급 — 다소 높은 금리가 적용될 수 있습니다.",
+        "E": "🟠 주의 등급 — 상당히 높은 금리가 적용됩니다.",
+        "F": "🔴 불량 등급 — 높은 금리와 심사 제한이 있을 수 있습니다.",
+        "G": "🔴 최하위 등급 — 대출 승인이 어려울 수 있습니다.",
+    }
+    st.markdown(f"""
+    <div class="info-card">
+        💡 <b>등급 {loan_grade} 해석:</b> {grade_comment[loan_grade]}
+    </div>""", unsafe_allow_html=True)
 
 
 # ── 메인 ─────────────────────────────────────────────────────────────────────
@@ -229,94 +216,95 @@ st.divider()
 tab1, tab2, tab3 = st.tabs(["🔮 금리 예측", "📊 모델 성능", "📈 데이터 인사이트"])
 
 
-# ── Tab 1: 금리 예측 ──────────────────────────────────────────────────────────
+# ── Tab 1: 입력 폼 + 예측 ──────────────────────────────────────────────────────
 
 with tab1:
-    col_left, col_right = st.columns([3, 2])
+    st.subheader("📋 대출 신청 정보 입력")
 
-    with col_left:
-        st.subheader("🔮 예측 결과")
+    col_a, col_b = st.columns(2, gap="large")
 
-        if predict_btn:
-            raw = {
-                "person_age": person_age,
-                "person_income": person_income,
-                "person_home_ownership": person_home_ownership,
-                "person_emp_length": person_emp_length,
-                "loan_intent": loan_intent,
-                "loan_grade": loan_grade,
-                "loan_amnt": loan_amnt,
-                "loan_status": loan_status,
-                "loan_percent_income": loan_percent_income,
-                "cb_person_default_on_file": cb_person_default_on_file,
-                "cb_person_cred_hist_length": cb_person_cred_hist_length,
-            }
-            with st.spinner("🤖 AI가 예측 중입니다..."):
-                rate, prob = predict(raw)
-            st.session_state["result"] = (rate, prob)
+    with col_a:
+        st.markdown('<p class="section-title">👤 신청자 정보</p>', unsafe_allow_html=True)
+        person_age = st.slider("🎂 나이", 18, 100, 30)
+        person_income = st.number_input(
+            "💵 연 소득 (달러)", min_value=1_000, max_value=10_000_000,
+            value=60_000, step=1_000,
+        )
+        person_home_ownership = st.selectbox(
+            "🏠 주거 형태",
+            ["RENT", "OWN", "MORTGAGE", "OTHER"],
+            format_func=lambda x: {
+                "RENT": "🏠 임대", "OWN": "🏡 자가",
+                "MORTGAGE": "🏦 담보대출", "OTHER": "🏢 기타",
+            }[x],
+        )
+        person_emp_length = st.slider("💼 재직 기간 (년)", 0.0, 60.0, 3.0, step=0.5)
 
-        if "result" in st.session_state:
-            rate, prob = st.session_state["result"]
-            is_safe = prob < 50
+    with col_b:
+        st.markdown('<p class="section-title">💰 대출 정보</p>', unsafe_allow_html=True)
+        loan_amnt = st.number_input(
+            "💲 대출 금액 (달러)", min_value=500, max_value=500_000,
+            value=10_000, step=500,
+        )
+        loan_intent = st.selectbox(
+            "🎯 대출 목적",
+            ["PERSONAL", "EDUCATION", "MEDICAL", "VENTURE", "HOMEIMPROVEMENT", "DEBTCONSOLIDATION"],
+            format_func=lambda x: {
+                "PERSONAL": "👤 개인 용도", "EDUCATION": "🎓 교육",
+                "MEDICAL": "🏥 의료", "VENTURE": "🚀 창업",
+                "HOMEIMPROVEMENT": "🔨 주거 개선", "DEBTCONSOLIDATION": "🔄 부채 통합",
+            }[x],
+        )
+        loan_grade = st.select_slider(
+            "📊 대출 등급 (A=우량 / G=불량)",
+            options=["A", "B", "C", "D", "E", "F", "G"], value="C",
+        )
+        loan_status = st.radio(
+            "📋 현재 대출 상태", [0, 1],
+            format_func=lambda x: "✅ 정상 상환 중" if x == 0 else "⚠️ 연체 / 부도",
+            horizontal=True,
+        )
 
-            r1, r2 = st.columns(2)
-            with r1:
-                st.markdown(f"""
-                <div class="result-box">
-                    <div class="result-label">📈 예측 대출 금리</div>
-                    <div class="result-value">{rate}</div>
-                    <div class="result-unit">% per annum</div>
-                </div>""", unsafe_allow_html=True)
-            with r2:
-                css   = "status-safe" if is_safe else "status-risk"
-                icon  = "✅" if is_safe else "⚠️"
-                label = "정상" if is_safe else "부도 위험"
-                st.markdown(f"""
-                <div class="{css}">
-                    <div class="status-icon">{icon}</div>
-                    <div class="result-label" style="color:white;opacity:.85;">🏦 부도 판정</div>
-                    <div class="status-text">{label}</div>
-                </div>""", unsafe_allow_html=True)
+    st.divider()
 
-            st.markdown(f"#### 📉 부도 확률: **{prob}%**")
-            st.progress(prob / 100)
+    col_c, col_d = st.columns(2, gap="large")
 
-            grade_comment = {
-                "A": "🟢 최우량 등급 — 낮은 금리가 적용될 가능성이 높습니다.",
-                "B": "🟢 우량 등급 — 평균 이하의 금리를 기대할 수 있습니다.",
-                "C": "🟡 양호한 등급 — 평균 수준의 금리가 적용됩니다.",
-                "D": "🟡 보통 등급 — 다소 높은 금리가 적용될 수 있습니다.",
-                "E": "🟠 주의 등급 — 상당히 높은 금리가 적용됩니다.",
-                "F": "🔴 불량 등급 — 높은 금리와 심사 제한이 있을 수 있습니다.",
-                "G": "🔴 최하위 등급 — 대출 승인이 어려울 수 있습니다.",
-            }
-            st.markdown(f"""
-            <div class="info-card">
-                💡 <b>등급 {loan_grade} 해석:</b> {grade_comment[loan_grade]}
-            </div>""", unsafe_allow_html=True)
+    with col_c:
+        st.markdown('<p class="section-title">📋 신용 정보</p>', unsafe_allow_html=True)
+        cb_person_default_on_file = st.radio(
+            "🚨 과거 부도 이력", ["N", "Y"],
+            format_func=lambda x: "✅ 없음" if x == "N" else "⚠️ 있음",
+            horizontal=True,
+        )
+        cb_person_cred_hist_length = st.slider("📅 신용 이력 기간 (년)", 0, 30, 5)
 
-        else:
-            st.info("👈 왼쪽 사이드바에서 정보를 입력하고 **🔍 예측하기** 버튼을 눌러주세요.")
+    with col_d:
+        loan_percent_income = round(loan_amnt / person_income, 4) if person_income > 0 else 0.0
+        st.markdown('<p class="section-title">📊 자동 계산</p>', unsafe_allow_html=True)
+        st.info(f"📊 소득 대비 대출 비율: **{loan_percent_income:.2%}**")
 
-    with col_right:
-        st.subheader("📋 입력 요약")
-        summary = {
-            "🎂 나이": f"{person_age}세",
-            "💵 연 소득": f"${person_income:,}",
-            "🏠 주거 형태": person_home_ownership,
-            "💼 재직 기간": f"{person_emp_length}년",
-            "💲 대출 금액": f"${loan_amnt:,}",
-            "🎯 대출 목적": loan_intent,
-            "📊 대출 등급": loan_grade,
-            "📋 현재 상태": "✅ 정상" if loan_status == 0 else "⚠️ 연체/부도",
-            "📊 소득 대비 비율": f"{loan_percent_income:.2%}",
-            "🚨 과거 부도 이력": "✅ 없음" if cb_person_default_on_file == "N" else "⚠️ 있음",
-            "📅 신용 이력": f"{cb_person_cred_hist_length}년",
+    st.divider()
+
+    _, btn_col, _ = st.columns([2, 1, 2])
+    with btn_col:
+        predict_btn = st.button("🔍 예측하기", type="primary", use_container_width=True)
+
+    if predict_btn:
+        raw = {
+            "person_age": person_age,
+            "person_income": person_income,
+            "person_home_ownership": person_home_ownership,
+            "person_emp_length": person_emp_length,
+            "loan_intent": loan_intent,
+            "loan_grade": loan_grade,
+            "loan_amnt": loan_amnt,
+            "loan_status": loan_status,
+            "loan_percent_income": loan_percent_income,
+            "cb_person_default_on_file": cb_person_default_on_file,
+            "cb_person_cred_hist_length": cb_person_cred_hist_length,
         }
-        for k, v in summary.items():
-            c1, c2 = st.columns([1, 1])
-            c1.markdown(f"**{k}**")
-            c2.markdown(v)
+        rate, prob = predict(raw)
+        show_result_modal(rate, prob, loan_grade)
 
 
 # ── Tab 2: 모델 성능 ──────────────────────────────────────────────────────────
