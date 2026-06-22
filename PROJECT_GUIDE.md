@@ -24,7 +24,7 @@ ml_project/
 │
 ├── models/                   ← 학습된 모델 pkl 파일
 │   ├── loan_rate_model.pkl       (13.82MB — RandomForestRegressor n_estimators=100, compress=3)
-│   └── loan_status_model.pkl     (2.92MB  — RandomForestClassifier n_estimators=50, compress=3)
+│   └── loan_status_model.pkl     (0.1MB   — XGBClassifier n_estimators=100, compress=3)
 │
 ├── notebooks/                ← 분석 과정 Jupyter 노트북 4개
 │
@@ -105,7 +105,7 @@ def train()  # 학습 실행 → (regressor, classifier, X_test, y_test) 반환
 | 구분 | 알고리즘 | 예측 대상 | 저장 경로 |
 |------|---------|----------|----------|
 | 회귀 | RandomForestRegressor (n_estimators=100, max_depth=15, compress=3) | `loan_int_rate` — 대출 금리(%) | `models/loan_rate_model.pkl` |
-| 분류 | RandomForestClassifier (n_estimators=50, compress=3) | `loan_status` — 정상/부도 여부 | `models/loan_status_model.pkl` |
+| 분류 | XGBClassifier (n_estimators=100, compress=3) | `loan_status` — 정상/부도 여부 | `models/loan_status_model.pkl` |
 
 **사용 피처 (11개):**
 
