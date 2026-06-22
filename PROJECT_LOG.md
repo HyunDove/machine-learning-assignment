@@ -84,6 +84,39 @@
 
 ---
 
+### 2026-06-22
+
+#### 1. UI 개편 — 중앙 입력 폼 + @st.dialog 결과 모달
+- 사이드바 입력 폼 제거, `initial_sidebar_state="collapsed"`
+- Tab 1: 2열 그리드 입력 폼 (col_a 신청자정보, col_b 대출정보, col_c 신용정보, col_d 자동계산)
+- 예측 결과: `@st.dialog("🔮 예측 결과", width="large")` 오버레이 모달로 표시 (Streamlit 1.36.0+)
+- `requirements.txt`: `streamlit>=1.35.0` → `>=1.36.0`
+
+#### 2. 회귀 모델 GBR → RandomForestRegressor 교체 + compress=3 적용
+| 항목 | 변경 전 | 변경 후 |
+|---|---|---|
+| 회귀 알고리즘 | GradientBoostingRegressor (n_estimators=200) | RandomForestRegressor (n_estimators=100, max_depth=15) |
+| compress | 없음 | compress=3 (무손실 압축) |
+| loan_rate_model.pkl | 363KB | 13.82MB |
+| loan_status_model.pkl | 17MB | 2.92MB (compress=3 적용) |
+| R² | 0.9041 | 0.9011 |
+| RMSE | 1.0079 | 1.0235 |
+| MAE | 0.7899 | 0.7941 |
+
+#### 3. 문서 최신화
+- `README.md`: 모델 비교표·평가 결과·파이프라인 섹션·체크리스트 갱신
+- `ml_assignment_notes.md`: 모델 성능표 RF 최종채택으로 변경
+- `reports/AI개발_수행내역서.md`: 3절 모델 선정·4절 예측 결과·6절 요약 RF 기준으로 갱신
+- `PROJECT_GUIDE.md` (신규): 전체 소스 구조·데이터 흐름·파일별 상세 설명
+
+#### 4. 파일 변경 내역
+- `streamlit_app.py`: 사이드바 제거, 2열 그리드 입력, `@st.dialog` 모달 추가
+- `ml/train.py`: RandomForestRegressor(n_estimators=100, max_depth=15) + compress=3 후 재학습
+- `requirements.txt`: `streamlit>=1.36.0`으로 상향
+- `PROJECT_GUIDE.md` (신규 생성)
+
+---
+
 ## 프로젝트 구조 (최종)
 
 ```
@@ -109,8 +142,8 @@ ml_project/
 │   └── evaluate.py                  # RMSE, MAE, R² 평가
 │
 ├── models/                          # 학습된 모델 파일 (git 추적)
-│   ├── loan_rate_model.pkl          # GradientBoostingRegressor (363KB)
-│   └── loan_status_model.pkl        # RandomForestClassifier n_estimators=50 (17MB)
+│   ├── loan_rate_model.pkl          # RandomForestRegressor n_estimators=100, compress=3 (13.82MB)
+│   └── loan_status_model.pkl        # RandomForestClassifier n_estimators=50, compress=3 (2.92MB)
 │
 ├── notebooks/                       # Jupyter 노트북
 │   ├── 01_eda.ipynb                 # EDA — 분포·결측치·상관관계
@@ -153,7 +186,7 @@ ml_project/
 | 파일 | 역할 | 실행 방법 |
 |---|---|---|
 | `ml/preprocessing.py` | 결측치 처리, 이상치 제거, LabelEncoding | `python ml/preprocessing.py` |
-| `ml/train.py` | GBR(회귀) + RF(분류) 학습 후 `.pkl` 저장 | `python ml/train.py` |
+| `ml/train.py` | RF(회귀, n_estimators=100, max_depth=15, compress=3) + RF(분류, n_estimators=50, compress=3) 학습 후 `.pkl` 저장 | `python ml/train.py` |
 | `ml/evaluate.py` | RMSE, MAE, R² 출력 | `python ml/evaluate.py` |
 
 ### Flask API
@@ -215,7 +248,7 @@ ml_project/
 ## 남은 작업 (TODO)
 
 - [x] 데이터 전처리 (`ml/preprocessing.py`)
-- [x] 모델 학습 (`ml/train.py`) — GBR R² 0.9041 / RF AUC 0.9397
+- [x] 모델 학습 (`ml/train.py`) — RF 회귀 R² 0.9011 / RF 분류 AUC 0.9397
 - [x] 성능 평가 (`ml/evaluate.py`)
 - [x] Jupyter 노트북 4종 (`notebooks/01~04`)
 - [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)

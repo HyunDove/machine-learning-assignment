@@ -49,9 +49,9 @@ ml_project/
 │   ├── train.py                    # 모델 학습 (회귀 + 분류)
 │   └── evaluate.py                 # RMSE, MAE, R² 평가
 │
-├── 📂 models/                      # 학습된 모델 파일 (git 추적)
-│   ├── loan_rate_model.pkl         # GradientBoostingRegressor (363KB)
-│   └── loan_status_model.pkl       # RandomForestClassifier n_estimators=50 (17MB)
+├── 📂 models/                      # 학습된 모델 파일 (git 추적, compress=3 무손실 압축)
+│   ├── loan_rate_model.pkl         # RandomForestRegressor n_estimators=100 (13.82MB)
+│   └── loan_status_model.pkl       # RandomForestClassifier n_estimators=50 (2.92MB)
 │
 ├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
 │   ├── 01_eda.ipynb                # EDA — 결측치·분포·상관관계 탐색
@@ -112,10 +112,11 @@ ml_project/
 |---|---|---|---|
 | 선형 회귀 | 0.8702 | 1.1725 | 0.9139 |
 | 릿지 회귀 | 0.8702 | 1.1725 | 0.9140 |
-| ✅ **GradientBoostingRegressor** | **0.9041** | **1.0079** | **0.7899** |
-| RandomForestRegressor | 0.9062 | 0.9967 | 0.7735 |
+| GradientBoostingRegressor | 0.9041 | 1.0079 | 0.7899 |
+| ✅ **RandomForestRegressor** | **0.9011** | **1.0235** | **0.7941** |
 
-> 웹앱 배포 기준 최종 채택: **GradientBoostingRegressor**
+> 최종 배포 채택: **RandomForestRegressor** (n_estimators=100, max_depth=15, compress=3 → **13.82MB**)  
+> ※ 비교 실험 시 n_estimators=200 RF 성능(R²=0.9062)이 최우수였으나 파일 크기 초과로 하이퍼파라미터 조정 후 배포
 
 ### 🟠 분류 — `loan_status` 예측
 
@@ -123,19 +124,19 @@ ml_project/
 |---|---|---|---|---|
 | ✅ **RandomForestClassifier** | **0.9397** | 0.98 | 0.71 | 0.83 |
 
-> `n_estimators=50` 으로 경량화 (200개 → 67MB에서 50개 → **17MB**, AUC 성능 차이 미미)
+> `n_estimators=50` + `compress=3` 적용 → **2.92MB** (압축 전 16.46MB)
 
 ---
 
 ## 📈 평가 결과
 
-> **GradientBoostingRegressor** 기준 (test set 20%, random_state=42)
+> **RandomForestRegressor** 기준 (n_estimators=100, max_depth=15, test set 20%, random_state=42)
 
 | 지표 | 값 |
 |---|---|
-| 📉 **RMSE** | `1.0079` |
-| 📉 **MAE** | `0.7899` |
-| 📈 **R²** | `0.9041` |
+| 📉 **RMSE** | `1.0235` |
+| 📉 **MAE** | `0.7941` |
+| 📈 **R²** | `0.9011` |
 
 R² **0.90** — 모델이 대출 금리 분산의 90%를 설명합니다.
 
@@ -229,7 +230,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
    결측치 제거 · 이상치 필터 · LabelEncoding → CSV 저장
      ↓
 🤖 모델 학습 (03_modeling.ipynb / ml/train.py)
-   GBR 회귀 + RF 분류 → .pkl 저장
+   RF 회귀 + RF 분류 → .pkl 저장 (compress=3)
      ↓
 📏 성능 평가 (04_evaluation.ipynb / ml/evaluate.py)
    RMSE / MAE / R² / AUC-ROC
@@ -261,7 +262,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 프로젝트 구조 스캐폴딩
 - [x] 데이터 전처리 (`ml/preprocessing.py`)
 - [x] 모델 학습 (`ml/train.py`)
-- [x] 성능 평가 (`ml/evaluate.py`) — R² 0.9041
+- [x] 성능 평가 (`ml/evaluate.py`) — R² 0.9011
 - [x] EDA Jupyter 노트북 (`notebooks/01_eda.ipynb`)
 - [x] 전처리 노트북 (`notebooks/02_preprocessing.ipynb`)
 - [x] 모델 학습 노트북 (`notebooks/03_modeling.ipynb`)

@@ -162,10 +162,11 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 |---|---|---|---|
 | 선형 회귀 | 0.8702 | 1.1725 | 0.9139 |
 | 릿지 회귀 | 0.8702 | 1.1725 | 0.9140 |
-| ✅ **GradientBoostingRegressor** | **0.9041** | **1.0079** | **0.7899** |
-| RandomForestRegressor | 0.9062 | 0.9967 | 0.7735 |
+| GradientBoostingRegressor | 0.9041 | 1.0079 | 0.7899 |
+| ✅ **RandomForestRegressor** | **0.9011** | **1.0235** | **0.7941** |
 
-> 최종 채택: **GradientBoostingRegressor** — RF 대비 성능 근접하나 pkl 용량 363KB로 경량
+> 최종 배포 채택: **RandomForestRegressor** — n_estimators=100, max_depth=15, compress=3 → 13.82MB  
+> ※ 비교 실험 시 n_estimators=200 RF(R²=0.9062)가 최우수였으나, 하이퍼파라미터 조정 + 무손실 압축으로 배포 가능 크기 달성
 
 ### 분류 — `loan_status` 예측
 
@@ -184,7 +185,7 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 | `streamlit_app.py` | 3탭 웹앱 (금리예측 / 모델성능 / 데이터인사이트) |
 | `requirements.txt` | `scikit-learn==1.4.0` 고정 (pkl 역직렬화 버전 호환) |
 | `packages.txt` | `fonts-nanum` (Streamlit Cloud 한글 폰트 설치) |
-| `models/*.pkl` | git 추적 — Cold Start 재학습 불필요 |
+| `models/*.pkl` | git 추적 — RF 회귀(13.82MB, compress=3), RF 분류(2.92MB, compress=3) |
 | `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
 
 **트러블슈팅 이력:**
@@ -200,8 +201,8 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 - [x] Kaggle 대출 데이터셋 선정 (Credit Risk Dataset)
 - [x] EDA 진행 (결측치, 이상치, 상관관계) — `notebooks/01_eda.ipynb`
 - [x] 데이터 전처리 — `ml/preprocessing.py`
-- [x] 모델 선정 및 학습 — GBR(회귀) + RF(분류) — `ml/train.py`
-- [x] RMSE, MAE, R² 평가 — R² 0.9041 달성
+- [x] 모델 선정 및 학습 — RF(회귀, n_estimators=100, max_depth=15, compress=3) + RF(분류) — `ml/train.py`
+- [x] RMSE, MAE, R² 평가 — R² 0.9011 달성
 - [x] 웹 API 구축 (Flask) — `backend/` (테스트 6/6 PASS)
 - [x] Jupyter 노트북 4종 작성 (01~04)
 - [x] 시각화 구현 — `reports/figures/` 13종
