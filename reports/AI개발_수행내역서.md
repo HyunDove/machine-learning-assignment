@@ -277,7 +277,29 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 - **잔차 vs 예측값 (중)**: 예측값 전 구간에 걸쳐 잔차가 0 주변에 고르게 분포하며, 특정 금리 구간에서 오차가 집중되는 이분산성(heteroscedasticity) 패턴이 두드러지지 않는다.
 - **절대 잔차 vs 실제값 (우)**: 절대 오차의 평균(MAE 기준선)이 전 구간에서 안정적으로 유지되어 모델이 고금리·저금리 구간 모두에서 일관된 예측력을 갖춤을 확인하였다.
 
-### 마. 부도 예측 분류 모델 평가
+### 마. 분류 모델 비교 (4종)
+
+![분류 모델 성능 비교](figures/14_clf_comparison.png)
+
+로지스틱 회귀, RandomForest, GradientBoosting, XGBoost 4종의 분류 모델을 AUC-ROC, F1, Precision, Recall 기준으로 비교하였다.
+
+<!-- [HWP: 표-XGBoost 행 배경색 연노랑] -->
+<!-- [HWP: Bold+초록] XGBClassifier AUC-ROC 수치 0.9528 에 적용 -->
+| 모델 | AUC-ROC | 비고 |
+|---|---|---|
+| 로지스틱 회귀 | 0.8472 | 선형 베이스라인 |
+| RandomForestClassifier | 0.9346 | 배포 모델 |
+| GradientBoostingClassifier | 0.9378 | — |
+| ✅ **XGBClassifier** | **0.9528** | 성능 최우수 |
+
+> 최우수 분류 모델: **XGBClassifier** (AUC-ROC 0.9528)  
+> 배포 모델은 기존 RandomForestClassifier(n_estimators=50) 유지 — 비교 실험 결과 별도 기록
+
+![ROC 곡선 비교](figures/15_roc_curves.png)
+
+ROC 곡선에서 XGBoost가 전 구간에 걸쳐 가장 높은 TPR을 기록하였다. GradientBoosting(0.9378)과 RandomForest(0.9346)는 근소한 차이이며, 로지스틱 회귀(0.8472)는 선형 모델의 한계를 보인다.
+
+### 바. 부도 예측 분류 모델 평가 (배포 모델)
 
 ![분류 모델 평가](figures/12_classification_evaluation.png)
 

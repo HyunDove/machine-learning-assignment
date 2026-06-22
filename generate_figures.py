@@ -11,9 +11,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
+from sklearn.ensemble import (
+    GradientBoostingRegressor, RandomForestRegressor,
+    GradientBoostingClassifier, RandomForestClassifier,
+)
+from sklearn.metrics import (
+    mean_squared_error, mean_absolute_error, r2_score,
+    roc_auc_score, roc_curve, f1_score, precision_score, recall_score,
+)
+from xgboost import XGBClassifier
 
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
@@ -30,6 +37,8 @@ FEATURES = [
     'loan_intent', 'loan_grade', 'loan_amnt', 'loan_status',
     'loan_percent_income', 'cb_person_default_on_file', 'cb_person_cred_hist_length',
 ]
+
+FEATURES_CLS = [f for f in FEATURES if f != 'loan_status']
 
 LABELS_KR = {
     'person_age': '나이', 'person_income': '연소득',
@@ -179,10 +188,80 @@ def main():
     plt.tight_layout()
     savefig('13_residual_analysis.png')
 
+    # ── 분류 모델 4종 비교 → 14, 15 ────────────────────────────────────
+    print('\n[4/4] 분류 4종 비교 → 14/15 생성...')
+    Xc = df[FEATURES_CLS]
+    yc = df['loan_status']
+    Xc_train, Xc_test, yc_train, yc_test = train_test_split(
+        Xc, yc, test_size=0.2, random_state=SEED
+    )
+
+    clf_models = {
+        '로지스틱 회귀':       LogisticRegression(max_iter=1000, random_state=SEED),
+        'RandomForest':        RandomForestClassifier(n_estimators=50, random_state=SEED, n_jobs=-1),
+        'GradientBoosting':    GradientBoostingClassifier(n_estimators=100, random_state=SEED),
+        'XGBoost':             XGBClassifier(n_estimators=100, random_state=SEED,
+                                             eval_metric='logloss', verbosity=0),
+    }
+    clf_results = {}
+    clf_probs   = {}
+    for name, model in clf_models.items():
+        print(f'  {name} ...', end=' ', flush=True)
+        model.fit(Xc_train, yc_train)
+        prob = model.predict_proba(Xc_test)[:, 1]
+        pred = model.predict(Xc_test)
+        clf_probs[name] = prob
+        clf_results[name] = {
+            'AUC-ROC':  round(float(roc_auc_score(yc_test, prob)), 4),
+            'F1':       round(float(f1_score(yc_test, pred)), 4),
+            'Precision': round(float(precision_score(yc_test, pred)), 4),
+            'Recall':   round(float(recall_score(yc_test, pred)), 4),
+        }
+        print(f'AUC={clf_results[name]["AUC-ROC"]:.4f}')
+
+    # 14 분류 모델 성능 비교 막대그래프
+    clf_names  = list(clf_results.keys())
+    clf_colors = ['#4C72B0', '#8172B2', '#C44E52', '#DD8452']
+    metrics_to_plot = ['AUC-ROC', 'F1', 'Precision', 'Recall']
+    fig, axes = plt.subplots(1, 4, figsize=(18, 5))
+    for ax, metric in zip(axes, metrics_to_plot):
+        vals     = [clf_results[m][metric] for m in clf_names]
+        bars     = ax.bar(clf_names, vals, color=clf_colors, width=0.5, edgecolor='white')
+        best_idx = int(np.argmax(vals))
+        bars[best_idx].set_edgecolor('gold')
+        bars[best_idx].set_linewidth(3)
+        ax.set_title(f'{metric} (높을수록 좋음)', fontsize=10, fontweight='bold')
+        ax.set_xticklabels(clf_names, rotation=15, ha='right', fontsize=8)
+        ax.set_ylim(0, 1.1)
+        for bar, v in zip(bars, vals):
+            ax.text(bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + 0.01, f'{v:.4f}', ha='center', fontsize=8)
+    plt.suptitle('분류 모델별 성능 비교 (부도 예측)', fontsize=13, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    savefig('14_clf_comparison.png')
+
+    # 15 ROC 곡선 오버레이
+    fig, ax = plt.subplots(figsize=(7, 6))
+    line_styles = ['-', '--', '-.', ':']
+    for (name, prob), ls in zip(clf_probs.items(), line_styles):
+        fpr, tpr, _ = roc_curve(yc_test, prob)
+        auc = clf_results[name]['AUC-ROC']
+        ax.plot(fpr, tpr, lw=2, linestyle=ls, label=f'{name} (AUC={auc:.4f})')
+    ax.plot([0, 1], [0, 1], 'k--', lw=1, label='Random (AUC=0.5)')
+    ax.set_xlabel('False Positive Rate')
+    ax.set_ylabel('True Positive Rate')
+    ax.set_title('ROC 곡선 비교 — 4개 분류 모델', fontsize=12, fontweight='bold')
+    ax.legend(fontsize=9, loc='lower right')
+    plt.tight_layout()
+    savefig('15_roc_curves.png')
+
     print('\n=== 완료 ===')
     rmse_dep = float(np.sqrt(mean_squared_error(y_test, y_pred)))
     mae_dep  = float(mean_absolute_error(y_test, y_pred))
-    print(f'배포 모델 성능 — RMSE: {rmse_dep:.4f}  MAE: {mae_dep:.4f}  R²: {r2_dep:.4f}')
+    print(f'회귀 배포 모델 — RMSE: {rmse_dep:.4f}  MAE: {mae_dep:.4f}  R2: {r2_dep:.4f}')
+    print('분류 비교 결과:')
+    for name, r in clf_results.items():
+        print(f'  {name}: AUC={r["AUC-ROC"]}  F1={r["F1"]}  P={r["Precision"]}  R={r["Recall"]}')
 
 
 if __name__ == '__main__':
