@@ -172,9 +172,12 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 
 | 모델 | AUC-ROC | Precision(부도) | Recall(부도) | F1(부도) |
 |---|---|---|---|---|
-| ✅ **RandomForestClassifier** | **0.9397** | 0.98 | 0.71 | 0.83 |
+| 로지스틱 회귀 | 0.8472 | — | — | — |
+| RandomForestClassifier | 0.9346 | — | — | — |
+| GradientBoostingClassifier | 0.9378 | — | — | — |
+| ✅ **XGBClassifier** | **0.9528** | — | — | — |
 
-> `n_estimators=50` 경량화 (200 → 67MB에서 50 → **17MB**, AUC 영향 미미)
+> 최종 배포 채택: **XGBClassifier** (n_estimators=100, compress=3) → **0.1MB**
 
 ---
 
@@ -185,7 +188,7 @@ person_age,person_income,person_home_ownership,person_emp_length,loan_intent,loa
 | `streamlit_app.py` | 3탭 웹앱 (금리예측 / 모델성능 / 데이터인사이트) |
 | `requirements.txt` | `scikit-learn==1.4.0` 고정 (pkl 역직렬화 버전 호환) |
 | `packages.txt` | `fonts-nanum` (Streamlit Cloud 한글 폰트 설치) |
-| `models/*.pkl` | git 추적 — RF 회귀(13.82MB, compress=3), RF 분류(2.92MB, compress=3) |
+| `models/*.pkl` | git 추적 — RF 회귀(13.82MB, compress=3), XGBoost 분류(0.1MB, compress=3) |
 | `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
 
 **트러블슈팅 이력:**

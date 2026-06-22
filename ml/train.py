@@ -1,7 +1,8 @@
 ﻿import pandas as pd
 import joblib
 import os
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
 
 PROCESSED_PATH = os.path.join(os.path.dirname(__file__), "../data/processed/credit_risk_cleaned.csv")
@@ -38,13 +39,18 @@ def train():
     regressor.fit(X_train, y_train)
     joblib.dump(regressor, os.path.join(MODEL_DIR, "loan_rate_model.pkl"), compress=_COMPRESS)
 
-    # 분류 — 대출 부도 (RandomForestClassifier)
+    # 분류 — 대출 부도 (XGBClassifier)
     features_no_status = [f for f in FEATURES if f != STATUS_TARGET]
     X_cls = df[features_no_status]
     y_cls = df[STATUS_TARGET]
     X_train_c, _, y_train_c, _ = train_test_split(X_cls, y_cls, test_size=0.2, random_state=42)
 
-    classifier = RandomForestClassifier(n_estimators=50, random_state=42)
+    classifier = XGBClassifier(
+        n_estimators=100,
+        random_state=42,
+        eval_metric="logloss",
+        verbosity=0,
+    )
     classifier.fit(X_train_c, y_train_c)
     joblib.dump(classifier, os.path.join(MODEL_DIR, "loan_status_model.pkl"), compress=_COMPRESS)
 

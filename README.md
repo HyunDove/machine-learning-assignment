@@ -51,7 +51,7 @@ ml_project/
 │
 ├── 📂 models/                      # 학습된 모델 파일 (git 추적, compress=3 무손실 압축)
 │   ├── loan_rate_model.pkl         # RandomForestRegressor n_estimators=100 (13.82MB)
-│   └── loan_status_model.pkl       # RandomForestClassifier n_estimators=50 (2.92MB)
+│   └── loan_status_model.pkl       # XGBClassifier n_estimators=100 (0.1MB)
 │
 ├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
 │   ├── 01_eda.ipynb                # EDA — 결측치·분포·상관관계 탐색
@@ -122,9 +122,12 @@ ml_project/
 
 | 모델 | AUC-ROC | Precision(부도) | Recall(부도) | F1(부도) |
 |---|---|---|---|---|
-| ✅ **RandomForestClassifier** | **0.9397** | 0.98 | 0.71 | 0.83 |
+| 로지스틱 회귀 | 0.8472 | — | — | — |
+| RandomForestClassifier | 0.9346 | — | — | — |
+| GradientBoostingClassifier | 0.9378 | — | — | — |
+| ✅ **XGBClassifier** | **0.9528** | — | — | — |
 
-> `n_estimators=50` + `compress=3` 적용 → **2.92MB** (압축 전 16.46MB)
+> 최종 배포 채택: **XGBClassifier** (n_estimators=100, compress=3) → **0.1MB**
 
 ---
 

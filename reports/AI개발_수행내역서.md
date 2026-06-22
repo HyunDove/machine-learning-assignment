@@ -292,8 +292,8 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 | GradientBoostingClassifier | 0.9378 | — |
 | ✅ **XGBClassifier** | **0.9528** | 성능 최우수 |
 
-> 최우수 분류 모델: **XGBClassifier** (AUC-ROC 0.9528)  
-> 배포 모델은 기존 RandomForestClassifier(n_estimators=50) 유지 — 비교 실험 결과 별도 기록
+> 최우수 분류 모델: **XGBClassifier** (AUC-ROC 0.9528) — 최종 배포 채택  
+> compress=3 적용 시 pkl **0.1MB** (RF 2.92MB 대비 97% 감소)
 
 ![ROC 곡선 비교](figures/15_roc_curves.png)
 
@@ -414,7 +414,7 @@ UI는 중앙 컨텐츠 영역에 입력 폼(2열 그리드)을 배치하고, 예
 | | `notebooks/03_modeling.ipynb` | 4개 모델 비교 학습 |
 | | `notebooks/04_evaluation.ipynb` | 잔차·ROC·피처 중요도 평가 |
 | 웹 서비스 | `streamlit_app.py` | Streamlit 인터랙티브 예측 웹앱 (Streamlit Cloud 배포, 탭 3개: 금리 예측·모델 성능·데이터 인사이트) — 입력 폼을 중앙 콘텐츠 영역에 배치, 예측 결과는 @st.dialog 모달로 표시 |
-| | `models/*.pkl` | 학습 모델 파일 git 추적 — RF 회귀 compress=3(13.82MB), RF 분류기 n_estimators=50 + compress=3(2.92MB) |
+| | `models/*.pkl` | 학습 모델 파일 git 추적 — RF 회귀 compress=3(13.82MB), XGBoost 분류기 n_estimators=100 + compress=3(0.1MB) |
 | REST API | `backend/` | Flask API, 6개 테스트 케이스 전체 통과 |
 
 ### 라. 한계점 및 개선 방향
