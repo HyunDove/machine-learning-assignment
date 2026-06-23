@@ -292,8 +292,8 @@ with tab2:
 
     st.dataframe(
         df_metrics.style
-            .highlight_max(subset=["R² ↑"], color="#c6f6d5")
-            .highlight_min(subset=["RMSE ↓", "MAE ↓"], color="#c6f6d5")
+            .highlight_max(subset=["R² ↑"],        props="background-color:#c6f6d5; color:#000000")
+            .highlight_min(subset=["RMSE ↓", "MAE ↓"], props="background-color:#c6f6d5; color:#000000")
             .format({"RMSE ↓": "{:.4f}", "MAE ↓": "{:.4f}", "R² ↑": "{:.4f}"}),
         use_container_width=True, hide_index=True,
     )
