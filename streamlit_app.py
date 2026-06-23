@@ -173,7 +173,7 @@ load_models()
 # ── 예측 결과 모달 ────────────────────────────────────────────────────────────
 
 @st.dialog("🔮 예측 결과", width="small")
-def show_result_modal(rate: float, loan_grade: str):
+def show_result_modal(rate: float, loan_grade: str, inputs: dict):
     st.markdown("""
     <style>
         /* 백드롭(검은 오버레이) 제거 */
@@ -188,8 +188,7 @@ def show_result_modal(rate: float, loan_grade: str):
     st.markdown(f"""
     <div class="result-box">
         <div class="result-label">📈 예측 대출 금리</div>
-        <div class="result-value">{rate}</div>
-        <div class="result-unit">% per annum</div>
+        <div class="result-value">{rate}%</div>
     </div>""", unsafe_allow_html=True)
 
     # ── 등급 내 위치 비교 ──────────────────────────────────────────────────
@@ -237,6 +236,56 @@ def show_result_modal(rate: float, loan_grade: str):
     <div class="info-card" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
         💡 <b>{loan_grade}등급:</b> {grade_comment[loan_grade]}
     </div>""", unsafe_allow_html=True)
+
+    # ── 입력값 vs 데이터 평균 비교 ────────────────────────────────────────────
+    if df_data is not None:
+        home_label = {"RENT": "임대", "OWN": "자가", "MORTGAGE": "담보대출", "OTHER": "기타"}
+        home_enc   = ENCODINGS["person_home_ownership"]
+
+        num_stats = {
+            "나이": ("person_age", inputs["person_age"], "세"),
+            "연소득": ("person_income", inputs["person_income"], "달러"),
+            "재직기간": ("person_emp_length", inputs["person_emp_length"], "년"),
+        }
+
+        rows_html = ""
+        for label, (col, val, unit) in num_stats.items():
+            avg_val = df_data[col].mean()
+            diff_v  = val - avg_val
+            if abs(diff_v) < avg_val * 0.02:
+                icon, clr, txt = "━", "#94a3b8", "평균 수준"
+            elif diff_v > 0:
+                icon, clr, txt = "▲", "#ef4444", f"평균+{diff_v:+.0f}{unit}"
+            else:
+                icon, clr, txt = "▼", "#22c55e", f"평균{diff_v:+.0f}{unit}"
+            rows_html += f"""
+            <tr>
+                <td style="padding:5px 8px; opacity:0.7; font-size:0.78rem;">{label}</td>
+                <td style="padding:5px 8px; font-weight:700; font-size:0.85rem;">{val:,.0f}{unit}</td>
+                <td style="padding:5px 8px; font-size:0.78rem; color:{clr}; white-space:nowrap;">
+                    {icon} {txt}
+                </td>
+            </tr>"""
+
+        # 주거형태 비율
+        own_enc  = home_enc.get(inputs["person_home_ownership"], -1)
+        own_pct  = (df_data["person_home_ownership"] == own_enc).mean() * 100
+        own_lbl  = home_label.get(inputs["person_home_ownership"], inputs["person_home_ownership"])
+        rows_html += f"""
+        <tr>
+            <td style="padding:5px 8px; opacity:0.7; font-size:0.78rem;">주거형태</td>
+            <td style="padding:5px 8px; font-weight:700; font-size:0.85rem;">{own_lbl}</td>
+            <td style="padding:5px 8px; font-size:0.78rem; color:#94a3b8; white-space:nowrap;">
+                ━ 전체의 {own_pct:.1f}%
+            </td>
+        </tr>"""
+
+        st.markdown(f"""
+        <div style="margin-top:10px; border-radius:10px; overflow:hidden;
+                    background:rgba(128,128,128,0.06); padding:6px 4px;">
+            <div style="font-size:0.72rem; opacity:0.55; padding:4px 8px 2px;">📊 입력값 vs 데이터 평균</div>
+            <table style="width:100%; border-collapse:collapse;">{rows_html}</table>
+        </div>""", unsafe_allow_html=True)
 
 
 # ── 메인 ─────────────────────────────────────────────────────────────────────
@@ -330,7 +379,7 @@ with tab1:
             "cb_person_cred_hist_length": cb_person_cred_hist_length,
         }
         rate = predict(raw)
-        show_result_modal(rate, loan_grade)
+        show_result_modal(rate, loan_grade, raw)
 
 
 # ── Tab 2: 모델 성능 ──────────────────────────────────────────────────────────
