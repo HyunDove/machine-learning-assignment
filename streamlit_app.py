@@ -68,13 +68,10 @@ MODEL_RESULTS = {
 def ensure_models():
     if os.path.exists(RATE_MODEL_PATH):
         return
+    # processed CSV는 git에 포함 — 전처리 생략하고 바로 학습
     with st.spinner("⚙️ 모델 파일이 없어 자동으로 학습 중입니다... (최초 1회)"):
         sys.path.insert(0, ROOT)
-        from ml.preprocessing import load_raw, preprocess, save_processed
         from ml.train import train
-        df = load_raw()
-        df = preprocess(df)
-        save_processed(df)
         train()
     st.success("✅ 모델 학습 완료!")
 
