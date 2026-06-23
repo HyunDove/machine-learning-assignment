@@ -48,7 +48,7 @@ ml_project/
 │   ├── train.py                    # 모델 학습 (RF 회귀, RandomizedSearchCV 튜닝)
 │   └── evaluate.py                 # RMSE, MAE, R² 평가
 │
-├── 📂 models/                      # 학습된 모델 파일 (로컬 시연용 — git 추적 제외)
+├── 📂 models/                      # 학습된 모델 파일 (git 추적 제외 — GitHub Releases에서 자동 다운로드)
 │   └── loan_rate_model.pkl         # RandomForestRegressor n_estimators=200 (compress=3)
 │
 ├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
@@ -112,7 +112,7 @@ ml_project/
 | ✅ **RandomForestRegressor (튜닝)** | **0.9053** | **1.0017** | **0.7826** |
 
 > 최종 배포 채택: **RandomForestRegressor** (RandomizedSearchCV 튜닝: n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1, compress=3)  
-> `models/*.pkl`은 로컬 시연 전용으로 git 추적 제외 (`.gitignore`)
+> `models/*.pkl`은 git 추적 제외 — Streamlit 앱 실행 시 **GitHub Releases `v1.0.0-models`** 에서 자동 다운로드
 
 ---
 
@@ -152,8 +152,8 @@ python ml/train.py
 python ml/evaluate.py
 ```
 
-> `models/*.pkl`은 git에서 제외되어 있습니다(로컬 시연 전용).  
-> pkl이 없으면 `ensure_models()`가 자동으로 전처리·학습을 실행합니다.  
+> `models/*.pkl`은 git에서 제외되어 있습니다.  
+> pkl이 없으면 `ensure_models()`가 **GitHub Releases `v1.0.0-models`** 에서 자동으로 다운로드합니다.  
 > `data/processed/*.csv`는 git에 포함되어 있으므로 별도 전처리 없이 바로 사용 가능합니다.
 
 ### 3️⃣ Jupyter 노트북 실행
@@ -235,7 +235,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
 |---|---|
 | `requirements.txt` | Python 패키지 (`scikit-learn==1.4.0` 고정 — pkl 역직렬화 버전 호환) |
 | `packages.txt` | OS 패키지 (`fonts-nanum` — 차트 한글 폰트) |
-| `models/*.pkl` | git 제외 (로컬 시연 전용) — Cloud에서는 `ensure_models()`가 자동 생성 |
+| `models/*.pkl` | git 제외 — 앱 시작 시 `ensure_models()`가 GitHub Releases `v1.0.0-models`에서 자동 다운로드 |
 | `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
 
 > `scikit-learn` 버전 불일치 시 `__pyx_unpickle AttributeError` 발생 → 반드시 버전 고정 필요
