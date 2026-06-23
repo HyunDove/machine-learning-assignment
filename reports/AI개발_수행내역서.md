@@ -258,7 +258,7 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 ![랜덤 포레스트 예측 결과](figures/07_model_rf.png)
 
 다수의 결정 트리를 병렬로 학습하여 평균을 취하는 랜덤 포레스트를 적용하였다. 독립변수는 전체 10개 피처를 사용한다. RandomizedSearchCV(n_iter=20, cv=3)를 통한 하이퍼파라미터 탐색 결과, <!-- [HWP: Bold] n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1 / 최종 배포 모델 에 Bold 적용 -->
-**n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1** 조합이 최적으로 도출되어 **최종 배포 모델**(`ml/train.py` 및 `models/loan_rate_model.pkl`)로 채택되었다.
+**n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1** 조합이 최적으로 도출되어 **최종 배포 모델**(`ml/train.py` 및 `models/loan_rate_model.pkl`)로 채택되었다. 모델 파일은 git 추적에서 제외되며, Streamlit 앱 최초 실행 시 GitHub Releases(`v1.0.0-models`)에서 자동으로 다운로드된다.
 
 ### 나. 하이퍼파라미터 튜닝 (랜덤 포레스트)
 
@@ -423,7 +423,7 @@ UI는 중앙 컨텐츠 영역에 입력 폼(2열 그리드)을 배치하고, 예
 | | `notebooks/03_modeling.ipynb` | 4개 회귀 모델 비교 학습 |
 | | `notebooks/04_evaluation.ipynb` | 잔차·피처 중요도 평가 |
 | 웹 서비스 | `streamlit_app.py` | Streamlit 인터랙티브 예측 웹앱 (Streamlit Cloud 배포, 탭 3개: 금리 예측·모델 성능·데이터 인사이트) — 입력 폼을 중앙 콘텐츠 영역에 배치, 예측 결과는 @st.dialog 모달로 표시 |
-| | `models/loan_rate_model.pkl` | RF 회귀 모델 — compress=3(13.82MB) |
+| | `models/loan_rate_model.pkl` | RF 회귀 모델 — compress=3(13.82MB), git 제외 · GitHub Releases `v1.0.0-models`에서 자동 다운로드 |
 | REST API | `backend/` | Flask API, 6개 테스트 케이스 전체 통과 |
 
 ### 라. 한계점 및 개선 방향
