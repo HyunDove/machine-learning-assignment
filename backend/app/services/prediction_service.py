@@ -1,5 +1,5 @@
 ﻿from ..models.schemas import PredictionRequest, PredictionResponse
-from ..utils.model_loader import get_regressor, get_classifier
+from ..utils.model_loader import get_regressor
 import pandas as pd
 
 # LabelEncoder 알파벳 순 인코딩 (preprocessing.py와 동일)
@@ -15,10 +15,9 @@ _ENCODINGS = {
 
 _FEATURES = [
     "person_age", "person_income", "person_home_ownership", "person_emp_length",
-    "loan_intent", "loan_grade", "loan_amnt", "loan_status",
+    "loan_intent", "loan_grade", "loan_amnt",
     "loan_percent_income", "cb_person_default_on_file", "cb_person_cred_hist_length",
 ]
-_FEATURES_NO_STATUS = [f for f in _FEATURES if f != "loan_status"]
 
 
 class PredictionService:
@@ -28,20 +27,10 @@ class PredictionService:
             data[col] = mapping[data[col]]
 
         regressor = get_regressor()
-        classifier = get_classifier()
+        df = pd.DataFrame([data])[_FEATURES]
+        rate = float(regressor.predict(df)[0])
 
-        df_reg = pd.DataFrame([data])[_FEATURES]
-        df_cls = pd.DataFrame([data])[_FEATURES_NO_STATUS]
-
-        rate = float(regressor.predict(df_reg)[0])
-        prob = float(classifier.predict_proba(df_cls)[0][1])
-        label = "부도" if prob >= 0.5 else "정상"
-
-        return PredictionResponse(
-            loan_int_rate=round(rate, 4),
-            loan_status_prob=round(prob, 4),
-            loan_status_label=label,
-        )
+        return PredictionResponse(loan_int_rate=round(rate, 4))
 
 
 prediction_service = PredictionService()

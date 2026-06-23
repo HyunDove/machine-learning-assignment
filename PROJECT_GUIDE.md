@@ -23,8 +23,7 @@ ml_project/
 │   └── processed/            ← 전처리 완료 CSV
 │
 ├── models/                   ← 학습된 모델 pkl 파일
-│   ├── loan_rate_model.pkl       (13.82MB — RandomForestRegressor n_estimators=100, compress=3)
-│   └── loan_status_model.pkl     (0.1MB   — XGBClassifier n_estimators=100, compress=3)
+│   └── loan_rate_model.pkl       (13.82MB — RandomForestRegressor n_estimators=100, compress=3)
 │
 ├── notebooks/                ← 분석 과정 Jupyter 노트북 4개
 │
@@ -94,10 +93,10 @@ def save_processed(df) # data/processed/ 에 저장
 
 ### `ml/train.py` — 모델 학습
 
-전처리된 데이터로 두 가지 모델을 학습하고 pkl 파일로 저장합니다.
+전처리된 데이터로 회귀 모델을 학습하고 pkl 파일로 저장합니다.
 
 ```python
-def train()  # 학습 실행 → (regressor, classifier, X_test, y_test) 반환
+def train()  # 학습 실행 → (regressor, X_test, y_test) 반환
 ```
 
 **학습하는 모델:**
@@ -105,17 +104,14 @@ def train()  # 학습 실행 → (regressor, classifier, X_test, y_test) 반환
 | 구분 | 알고리즘 | 예측 대상 | 저장 경로 |
 |------|---------|----------|----------|
 | 회귀 | RandomForestRegressor (n_estimators=100, max_depth=15, compress=3) | `loan_int_rate` — 대출 금리(%) | `models/loan_rate_model.pkl` |
-| 분류 | XGBClassifier (n_estimators=100, compress=3) | `loan_status` — 정상/부도 여부 | `models/loan_status_model.pkl` |
 
-**사용 피처 (11개):**
+**사용 피처 (10개):**
 
 ```
 person_age, person_income, person_home_ownership, person_emp_length,
-loan_intent, loan_grade, loan_amnt, loan_status,
+loan_intent, loan_grade, loan_amnt,
 loan_percent_income, cb_person_default_on_file, cb_person_cred_hist_length
 ```
-
-> 분류 모델은 `loan_status` 자체를 예측하므로 해당 컬럼을 피처에서 제외(10개 사용).
 
 ---
 
@@ -125,9 +121,9 @@ loan_percent_income, cb_person_default_on_file, cb_person_cred_hist_length
 
 | 지표 | 값 | 의미 |
 |------|----|------|
-| RMSE | 1.0235 | 예측 금리와 실제 금리의 평균 오차 (단위: %) |
-| MAE | 0.7941 | 절대 오차 평균 |
-| R² | 0.9011 | 분산의 90.1%를 설명 (1에 가까울수록 좋음) |
+| RMSE | 1.0224 | 예측 금리와 실제 금리의 평균 오차 (단위: %) |
+| MAE | 0.7946 | 절대 오차 평균 |
+| R² | 0.9013 | 분산의 90.1%를 설명 (1에 가까울수록 좋음) |
 
 > 이 수치가 `streamlit_app.py`의 `MODEL_RESULTS` 딕셔너리에 하드코딩되어 있습니다. 재학습해도 자동 반영되지 않으므로 수동 갱신이 필요합니다.
 
@@ -150,13 +146,12 @@ Streamlit으로 만든 웹 애플리케이션입니다.
 #### Tab 1 — 금리 예측
 
 ```
-입력 폼 (11개 필드, 2열 그리드)
+입력 폼 (10개 필드, 2열 그리드)
   ↓ loan_percent_income 자동 계산 (loan_amnt / person_income)
   ↓ [예측하기] 버튼 클릭
   ↓ predict(raw)
-      ├── encode_input()              # 문자열 → 숫자 변환
-      ├── regressor.predict()         # 금리(float) 반환
-      └── classifier.predict_proba() # 부도 확률(0~1) 반환
+      ├── encode_input()      # 문자열 → 숫자 변환
+      └── regressor.predict() # 금리(float) 반환
   ↓ @st.dialog 모달로 결과 표시
 ```
 
@@ -203,7 +198,6 @@ Content-Type: application/json
   "loan_intent": "PERSONAL",
   "loan_grade": "C",
   "loan_amnt": 10000,
-  "loan_status": 0,
   "loan_percent_income": 0.1667,
   "cb_person_default_on_file": "N",
   "cb_person_cred_hist_length": 5
@@ -213,9 +207,7 @@ Content-Type: application/json
 **응답 예시:**
 ```json
 {
-  "loan_int_rate": 11.4200,
-  "loan_status_prob": 0.1800,
-  "loan_status_label": "정상"
+  "loan_int_rate": 11.4200
 }
 ```
 
@@ -239,7 +231,7 @@ class PredictionRequest(BaseModel):
     person_income: float
     person_home_ownership: Literal["RENT", "OWN", "MORTGAGE", "OTHER"]
     loan_grade: Literal["A", "B", "C", "D", "E", "F", "G"]
-    # ... 나머지 11개 필드
+    # ... 나머지 10개 필드 (loan_status 제외)
 ```
 
 #### `backend/app/errors.py` — 에러 처리
@@ -261,12 +253,12 @@ pytest 기반 6개 테스트 케이스입니다.
 
 | 테스트 함수 | 검증 내용 |
 |------------|---------|
-| `test_predict_success` | 정상 요청 → 200, 3개 응답 필드 존재 |
+| `test_predict_success` | 정상 요청 → 200, loan_int_rate 필드 존재 |
 | `test_predict_missing_field` | 빈 JSON → 400 |
 | `test_predict_invalid_grade` | 존재하지 않는 등급("Z") → 400 |
 | `test_predict_invalid_home_ownership` | 잘못된 주거형태 → 400 |
-| `test_predict_high_risk_profile` | 등급G + 연체 + 과거부도 → 금리 > 10% |
-| `test_predict_low_risk_profile` | 등급A + 정상 + 신용양호 → 금리 < 15% |
+| `test_predict_high_risk_profile` | 등급G + 과거부도 → 금리 > 10% |
+| `test_predict_low_risk_profile` | 등급A + 신용양호 → 금리 < 15% |
 
 ```bash
 # 실행
@@ -324,15 +316,6 @@ fonts-nanum    # Ubuntu 서버에 나눔 한글 폰트 설치
 ### MODEL_RESULTS는 정적 값
 
 `streamlit_app.py`의 `MODEL_RESULTS`는 노트북 실험 결과를 수동으로 복사한 값입니다. 모델을 재학습해도 자동으로 갱신되지 않습니다.
-
-### 분류 모델의 피처 수가 다름
-
-회귀 모델은 피처 11개, 분류 모델은 10개(`loan_status` 제외)를 사용합니다. `predict()` 함수에서 각각 별도의 DataFrame을 만드는 이유입니다.
-
-```python
-df_reg = encode_input(raw)[FEATURES]           # 11개
-df_cls = encode_input(raw)[FEATURES_NO_STATUS] # 10개 (loan_status 제외)
-```
 
 ### Streamlit Cloud 첫 실행
 

@@ -10,7 +10,6 @@ import streamlit as st
 ROOT              = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR         = os.path.join(ROOT, "models")
 RATE_MODEL_PATH   = os.path.join(MODEL_DIR, "loan_rate_model.pkl")
-STATUS_MODEL_PATH = os.path.join(MODEL_DIR, "loan_status_model.pkl")
 PROCESSED_PATH    = os.path.join(ROOT, "data", "processed", "credit_risk_cleaned.csv")
 
 
@@ -52,23 +51,22 @@ ENCODINGS = {
 
 FEATURES = [
     "person_age", "person_income", "person_home_ownership", "person_emp_length",
-    "loan_intent", "loan_grade", "loan_amnt", "loan_status",
+    "loan_intent", "loan_grade", "loan_amnt",
     "loan_percent_income", "cb_person_default_on_file", "cb_person_cred_hist_length",
 ]
-FEATURES_NO_STATUS = [f for f in FEATURES if f != "loan_status"]
 
 MODEL_RESULTS = {
-    "선형 회귀":        {"RMSE": 1.1725, "MAE": 0.9139, "R²": 0.8702},
-    "릿지 회귀":        {"RMSE": 1.1725, "MAE": 0.9140, "R²": 0.8702},
-    "그래디언트 부스팅": {"RMSE": 1.0079, "MAE": 0.7899, "R²": 0.9041},
-    "랜덤 포레스트":    {"RMSE": 0.9967, "MAE": 0.7735, "R²": 0.9062},
+    "선형 회귀":        {"RMSE": 1.1770, "MAE": 0.9173, "R²": 0.8692},
+    "릿지 회귀":        {"RMSE": 1.1770, "MAE": 0.9173, "R²": 0.8692},
+    "그래디언트 부스팅": {"RMSE": 1.0090, "MAE": 0.7896, "R²": 0.9039},
+    "랜덤 포레스트":    {"RMSE": 1.0224, "MAE": 0.7946, "R²": 0.9013},
 }
 
 
 # ── 모델 로드 ────────────────────────────────────────────────────────────────
 
 def ensure_models():
-    if os.path.exists(RATE_MODEL_PATH) and os.path.exists(STATUS_MODEL_PATH):
+    if os.path.exists(RATE_MODEL_PATH):
         return
     with st.spinner("⚙️ 모델 파일이 없어 자동으로 학습 중입니다... (최초 1회)"):
         sys.path.insert(0, ROOT)
@@ -84,7 +82,7 @@ def ensure_models():
 @st.cache_resource
 def load_models():
     ensure_models()
-    return joblib.load(RATE_MODEL_PATH), joblib.load(STATUS_MODEL_PATH)
+    return joblib.load(RATE_MODEL_PATH)
 
 
 @st.cache_data
@@ -104,12 +102,10 @@ def encode_input(raw: dict) -> pd.DataFrame:
 
 
 def predict(raw: dict):
-    regressor, classifier = load_models()
-    df_reg = encode_input(raw)[FEATURES]
-    df_cls = encode_input(raw)[FEATURES_NO_STATUS]
-    rate = float(regressor.predict(df_reg)[0])
-    prob = float(classifier.predict_proba(df_cls)[0][1])
-    return round(rate, 2), round(prob * 100, 1)
+    regressor = load_models()
+    df = encode_input(raw)[FEATURES]
+    rate = float(regressor.predict(df)[0])
+    return round(rate, 2)
 
 
 # ── 페이지 설정 ──────────────────────────────────────────────────────────────
@@ -167,30 +163,13 @@ load_models()
 # ── 예측 결과 모달 ────────────────────────────────────────────────────────────
 
 @st.dialog("🔮 예측 결과", width="large")
-def show_result_modal(rate: float, prob: float, loan_grade: str):
-    is_safe = prob < 50
-
-    r1, r2 = st.columns(2)
-    with r1:
-        st.markdown(f"""
-        <div class="result-box">
-            <div class="result-label">📈 예측 대출 금리</div>
-            <div class="result-value">{rate}</div>
-            <div class="result-unit">% per annum</div>
-        </div>""", unsafe_allow_html=True)
-    with r2:
-        css   = "status-safe" if is_safe else "status-risk"
-        icon  = "✅" if is_safe else "⚠️"
-        label = "정상" if is_safe else "부도 위험"
-        st.markdown(f"""
-        <div class="{css}">
-            <div class="status-icon">{icon}</div>
-            <div class="result-label" style="color:white;opacity:.85;">🏦 부도 판정</div>
-            <div class="status-text">{label}</div>
-        </div>""", unsafe_allow_html=True)
-
-    st.markdown(f"#### 📉 부도 확률: **{prob}%**")
-    st.progress(prob / 100)
+def show_result_modal(rate: float, loan_grade: str):
+    st.markdown(f"""
+    <div class="result-box">
+        <div class="result-label">📈 예측 대출 금리</div>
+        <div class="result-value">{rate}</div>
+        <div class="result-unit">% per annum</div>
+    </div>""", unsafe_allow_html=True)
 
     grade_comment = {
         "A": "🟢 최우량 등급 — 낮은 금리가 적용될 가능성이 높습니다.",
@@ -210,7 +189,7 @@ def show_result_modal(rate: float, prob: float, loan_grade: str):
 # ── 메인 ─────────────────────────────────────────────────────────────────────
 
 st.title("💳 대출 금리 예측 시스템")
-st.caption("📦 Credit Risk Dataset 기반 머신러닝 모델 · GradientBoostingRegressor + RandomForestClassifier")
+st.caption("📦 Credit Risk Dataset 기반 머신러닝 모델 · RandomForestRegressor")
 st.divider()
 
 tab1, tab2, tab3 = st.tabs(["🔮 금리 예측", "📊 모델 성능", "📈 데이터 인사이트"])
@@ -259,11 +238,6 @@ with tab1:
             "📊 대출 등급 (A=우량 / G=불량)",
             options=["A", "B", "C", "D", "E", "F", "G"], value="C",
         )
-        loan_status = st.radio(
-            "📋 현재 대출 상태", [0, 1],
-            format_func=lambda x: "✅ 정상 상환 중" if x == 0 else "⚠️ 연체 / 부도",
-            horizontal=True,
-        )
 
     st.divider()
 
@@ -298,13 +272,12 @@ with tab1:
             "loan_intent": loan_intent,
             "loan_grade": loan_grade,
             "loan_amnt": loan_amnt,
-            "loan_status": loan_status,
             "loan_percent_income": loan_percent_income,
             "cb_person_default_on_file": cb_person_default_on_file,
             "cb_person_cred_hist_length": cb_person_cred_hist_length,
         }
-        rate, prob = predict(raw)
-        show_result_modal(rate, prob, loan_grade)
+        rate = predict(raw)
+        show_result_modal(rate, loan_grade)
 
 
 # ── Tab 2: 모델 성능 ──────────────────────────────────────────────────────────
@@ -356,10 +329,9 @@ with tab2:
     st.subheader("🏆 최종 채택 모델 — RandomForestRegressor")
     st.caption("n_estimators=100 · max_depth=15 · max_features=sqrt · compress=3")
     m1, m2, m3 = st.columns(3)
-    m1.metric("📉 RMSE", "1.0235", delta="-0.1490 vs 선형회귀", delta_color="inverse")
-    m2.metric("📉 MAE",  "0.7941", delta="-0.1198 vs 선형회귀", delta_color="inverse")
-    m3.metric("📈 R²",   "0.9011", delta="+0.0309 vs 선형회귀")
-    st.caption("🎯 분류 모델(RandomForestClassifier) AUC-ROC: **0.9397**")
+    m1.metric("📉 RMSE", "1.0224", delta="-0.1546 vs 선형회귀", delta_color="inverse")
+    m2.metric("📉 MAE",  "0.7946", delta="-0.1227 vs 선형회귀", delta_color="inverse")
+    m3.metric("📈 R²",   "0.9013", delta="+0.0321 vs 선형회귀")
 
 
 # ── Tab 3: 데이터 인사이트 ────────────────────────────────────────────────────

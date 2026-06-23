@@ -29,7 +29,7 @@ df     = pd.read_csv(PROCESSED_PATH)
 
 FEATURES = [
     "person_age", "person_income", "person_home_ownership", "person_emp_length",
-    "loan_intent", "loan_grade", "loan_amnt", "loan_status",
+    "loan_intent", "loan_grade", "loan_amnt",
     "loan_percent_income", "cb_person_default_on_file", "cb_person_cred_hist_length",
 ]
 TARGET = "loan_int_rate"
@@ -84,7 +84,7 @@ col_labels_kr = {
     "person_age": "나이", "person_income": "연소득",
     "person_home_ownership": "주거형태", "person_emp_length": "재직기간",
     "loan_intent": "대출목적", "loan_grade": "대출등급",
-    "loan_amnt": "대출금액", "loan_status": "대출상태",
+    "loan_amnt": "대출금액",
     "loan_percent_income": "소득대비비율", "cb_person_default_on_file": "부도이력",
     "cb_person_cred_hist_length": "신용이력", "loan_int_rate": "대출금리",
 }
