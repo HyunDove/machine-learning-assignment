@@ -39,6 +39,16 @@ def _set_korean_font():
 
 _set_korean_font()
 
+
+def _chart_text_color() -> str:
+    """다크/라이트 테마에 맞는 텍스트 색상 반환"""
+    try:
+        base = st.context.theme.base
+    except Exception:
+        base = st.get_option("theme.base") or "light"
+    return "white" if base == "dark" else "#333333"
+
+
 ENCODINGS = {
     "person_home_ownership": {"MORTGAGE": 0, "OTHER": 1, "OWN": 2, "RENT": 3},
     "loan_intent": {
@@ -299,6 +309,7 @@ with tab2:
     model_names = list(MODEL_RESULTS.keys())
     base_colors = ["#94a3b8", "#94a3b8", "#667eea", "#764ba2"]
 
+    tc = _chart_text_color()
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.2))
     fig.patch.set_facecolor("none")
 
@@ -309,15 +320,17 @@ with tab2:
         colors[best] = "#f59e0b"
         bars = ax.bar(model_names, vals, color=colors, width=0.55, edgecolor="white", linewidth=0.5)
         ax.set_title(f"{metric}  ({'낮을수록 좋음' if lower else '높을수록 좋음'})",
-                     fontsize=11, fontweight="bold", pad=10)
+                     fontsize=11, fontweight="bold", pad=10, color=tc)
         ax.patch.set_alpha(0)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.set_xticklabels(model_names, rotation=15, ha="right", fontsize=9)
+        ax.spines[["left", "bottom"]].set_color(tc)
+        ax.tick_params(colors=tc)
+        ax.set_xticklabels(model_names, rotation=15, ha="right", fontsize=9, color=tc)
         for bar, v in zip(bars, vals):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.003,
-                    f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold")
+                    f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold", color=tc)
 
-    plt.suptitle("회귀 모델 성능 비교  (최우수 = 노란색 🥇)", fontsize=12, fontweight="bold", y=1.03)
+    plt.suptitle("회귀 모델 성능 비교  (최우수 = 노란색 🥇)", fontsize=12, fontweight="bold", y=1.03, color=tc)
     plt.tight_layout()
     st.pyplot(fig, use_container_width=True)
     plt.close()
@@ -349,16 +362,19 @@ with tab3:
         palette_grade = plt.cm.RdYlGn_r(np.linspace(0.15, 0.85, 7))
 
         def make_bar_chart(labels, values, color, ylabel="평균 금리 (%)"):
+            tc = _chart_text_color()
             fig, ax = plt.subplots(figsize=(6, 3.8))
             fig.patch.set_facecolor("none")
             bars = ax.bar(labels, values, color=color, edgecolor="white", width=0.6,
                           alpha=0.9 if isinstance(color, str) else 1.0)
-            ax.set_ylabel(ylabel, fontsize=10)
+            ax.set_ylabel(ylabel, fontsize=10, color=tc)
             ax.patch.set_alpha(0)
             ax.spines[["top", "right"]].set_visible(False)
+            ax.spines[["left", "bottom"]].set_color(tc)
+            ax.tick_params(colors=tc)
             for bar, val in zip(bars, values):
                 ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.08,
-                        f"{val:.2f}%", ha="center", fontsize=9, fontweight="bold")
+                        f"{val:.2f}%", ha="center", fontsize=9, fontweight="bold", color=tc)
             plt.tight_layout()
             return fig
 
