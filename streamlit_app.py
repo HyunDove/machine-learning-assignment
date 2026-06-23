@@ -174,10 +174,15 @@ load_models()
 
 @st.dialog("🔮 예측 결과", width="small")
 def show_result_modal(rate: float, loan_grade: str):
-    # 가운데 정렬 래퍼
     st.markdown("""
     <style>
-        div[data-testid="stDialog"] > div { max-width: 480px !important; margin: auto; }
+        /* 백드롭(검은 오버레이) 제거 */
+        div[data-testid="stDialogBackdrop"] { background: transparent !important; }
+        /* 모달 상하 가운데 정렬 */
+        div[data-testid="stDialog"] {
+            align-items: center !important;
+            justify-content: center !important;
+        }
     </style>""", unsafe_allow_html=True)
 
     st.markdown(f"""
@@ -211,7 +216,7 @@ def show_result_modal(rate: float, loan_grade: str):
             </div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:1.6rem; color:{color};">{arrow}</div>
-                <div style="font-size:0.72rem; color:{color}; font-weight:600;">{label}</div>
+                <div style="font-size:0.7rem; color:{color}; font-weight:600; white-space:nowrap;">{label}</div>
             </div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:0.75rem; opacity:0.6;">{loan_grade}등급 평균</div>
@@ -220,17 +225,17 @@ def show_result_modal(rate: float, loan_grade: str):
         </div>""", unsafe_allow_html=True)
 
     grade_comment = {
-        "A": "🟢 최우량 등급 — 낮은 금리가 적용될 가능성이 높습니다.",
-        "B": "🟢 우량 등급 — 평균 이하의 금리를 기대할 수 있습니다.",
-        "C": "🟡 양호한 등급 — 평균 수준의 금리가 적용됩니다.",
-        "D": "🟡 보통 등급 — 다소 높은 금리가 적용될 수 있습니다.",
-        "E": "🟠 주의 등급 — 상당히 높은 금리가 적용됩니다.",
-        "F": "🔴 불량 등급 — 높은 금리와 심사 제한이 있을 수 있습니다.",
-        "G": "🔴 최하위 등급 — 대출 승인이 어려울 수 있습니다.",
+        "A": "최우량 등급 — 낮은 금리 적용 가능성 높음",
+        "B": "우량 등급 — 평균 이하 금리 기대 가능",
+        "C": "양호 등급 — 평균 수준 금리 적용",
+        "D": "보통 등급 — 다소 높은 금리 적용 가능",
+        "E": "주의 등급 — 상당히 높은 금리 적용",
+        "F": "불량 등급 — 높은 금리 및 심사 제한",
+        "G": "최하위 등급 — 대출 승인 어려울 수 있음",
     }
     st.markdown(f"""
-    <div class="info-card">
-        💡 <b>등급 {loan_grade} 해석:</b> {grade_comment[loan_grade]}
+    <div class="info-card" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        💡 <b>{loan_grade}등급:</b> {grade_comment[loan_grade]}
     </div>""", unsafe_allow_html=True)
 
 
