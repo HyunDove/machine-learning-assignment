@@ -237,48 +237,55 @@ def show_result_modal(rate: float, loan_grade: str, inputs: dict):
         💡 <b>{loan_grade}등급:</b> {grade_comment[loan_grade]}
     </div>""", unsafe_allow_html=True)
 
-    # ── 입력값 vs 데이터 평균 비교 ────────────────────────────────────────────
+    # ── 전체 입력값 vs 데이터 평균 비교 ──────────────────────────────────────
     if df_data is not None:
-        home_label = {"RENT": "임대", "OWN": "자가", "MORTGAGE": "담보대출", "OTHER": "기타"}
-        home_enc   = ENCODINGS["person_home_ownership"]
-
-        num_stats = {
-            "나이": ("person_age", inputs["person_age"], "세"),
-            "연소득": ("person_income", inputs["person_income"], "달러"),
-            "재직기간": ("person_emp_length", inputs["person_emp_length"], "년"),
+        cat_labels = {
+            "person_home_ownership": {"MORTGAGE": "담보대출", "OTHER": "기타", "OWN": "자가", "RENT": "임대"},
+            "loan_intent": {
+                "DEBTCONSOLIDATION": "부채통합", "EDUCATION": "교육", "HOMEIMPROVEMENT": "주택개선",
+                "MEDICAL": "의료", "PERSONAL": "개인", "VENTURE": "사업",
+            },
+            "loan_grade": {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "F": "F", "G": "G"},
+            "cb_person_default_on_file": {"N": "없음", "Y": "있음"},
         }
 
-        rows_html = ""
-        for label, (col, val, unit) in num_stats.items():
+        def _num_row(label, col, val, fmt_val):
             avg_val = df_data[col].mean()
             diff_v  = val - avg_val
             if abs(diff_v) < avg_val * 0.02:
-                icon, clr, txt = "━", "#94a3b8", "평균 수준"
+                icon, clr, note = "━", "#94a3b8", "평균 수준"
             elif diff_v > 0:
-                icon, clr, txt = "▲", "#ef4444", f"평균+{diff_v:+.0f}{unit}"
+                icon, clr, note = "▲", "#ef4444", f"평균보다 높음"
             else:
-                icon, clr, txt = "▼", "#22c55e", f"평균{diff_v:+.0f}{unit}"
-            rows_html += f"""
-            <tr>
-                <td style="padding:5px 8px; opacity:0.7; font-size:0.78rem;">{label}</td>
-                <td style="padding:5px 8px; font-weight:700; font-size:0.85rem;">{val:,.0f}{unit}</td>
-                <td style="padding:5px 8px; font-size:0.78rem; color:{clr}; white-space:nowrap;">
-                    {icon} {txt}
-                </td>
+                icon, clr, note = "▼", "#22c55e", f"평균보다 낮음"
+            return f"""<tr>
+                <td style="padding:4px 8px;opacity:0.65;font-size:0.77rem;">{label}</td>
+                <td style="padding:4px 8px;font-weight:700;font-size:0.82rem;">{fmt_val}</td>
+                <td style="padding:4px 8px;font-size:0.77rem;color:{clr};white-space:nowrap;">{icon} {note}</td>
             </tr>"""
 
-        # 주거형태 비율
-        own_enc  = home_enc.get(inputs["person_home_ownership"], -1)
-        own_pct  = (df_data["person_home_ownership"] == own_enc).mean() * 100
-        own_lbl  = home_label.get(inputs["person_home_ownership"], inputs["person_home_ownership"])
-        rows_html += f"""
-        <tr>
-            <td style="padding:5px 8px; opacity:0.7; font-size:0.78rem;">주거형태</td>
-            <td style="padding:5px 8px; font-weight:700; font-size:0.85rem;">{own_lbl}</td>
-            <td style="padding:5px 8px; font-size:0.78rem; color:#94a3b8; white-space:nowrap;">
-                ━ 전체의 {own_pct:.1f}%
-            </td>
-        </tr>"""
+        def _cat_row(label, col, raw_val):
+            enc_val = ENCODINGS[col].get(raw_val, raw_val) if col in ENCODINGS else raw_val
+            pct     = (df_data[col] == enc_val).mean() * 100
+            lbl     = cat_labels[col].get(raw_val, raw_val)
+            return f"""<tr>
+                <td style="padding:4px 8px;opacity:0.65;font-size:0.77rem;">{label}</td>
+                <td style="padding:4px 8px;font-weight:700;font-size:0.82rem;">{lbl}</td>
+                <td style="padding:4px 8px;font-size:0.77rem;color:#94a3b8;white-space:nowrap;">━ 전체의 {pct:.1f}%</td>
+            </tr>"""
+
+        rows_html = (
+            _num_row("나이",       "person_age",               inputs["person_age"],               f"{inputs['person_age']:.0f}세")
+          + _num_row("연소득",     "person_income",            inputs["person_income"],            f"{inputs['person_income']:,.0f}달러")
+          + _cat_row("주거형태",   "person_home_ownership",    inputs["person_home_ownership"])
+          + _num_row("재직기간",   "person_emp_length",        inputs["person_emp_length"],        f"{inputs['person_emp_length']:.1f}년")
+          + _cat_row("대출목적",   "loan_intent",              inputs["loan_intent"])
+          + _cat_row("대출등급",   "loan_grade",               inputs["loan_grade"])
+          + _num_row("대출금액",   "loan_amnt",                inputs["loan_amnt"],                f"{inputs['loan_amnt']:,.0f}달러")
+          + _num_row("소득대비",   "loan_percent_income",      inputs["loan_percent_income"],      f"{inputs['loan_percent_income']:.1%}")
+          + _cat_row("부도이력",   "cb_person_default_on_file",inputs["cb_person_default_on_file"])
+          + _num_row("신용이력",   "cb_person_cred_hist_length",inputs["cb_person_cred_hist_length"],f"{inputs['cb_person_cred_hist_length']:.0f}년")
+        )
 
         st.markdown(f"""
         <div style="margin-top:10px; border-radius:10px; overflow:hidden;
