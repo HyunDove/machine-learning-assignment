@@ -249,15 +249,21 @@ def show_result_modal(rate: float, loan_grade: str, inputs: dict):
             "cb_person_default_on_file": {"N": "없음", "Y": "있음"},
         }
 
-        def _num_row(label, col, val, fmt_val):
-            avg_val = df_data[col].mean()
-            diff_v  = val - avg_val
-            if abs(diff_v) < avg_val * 0.02:
-                icon, clr, note = "━", "#94a3b8", "평균 수준"
-            elif diff_v > 0:
-                icon, clr, note = "▲", "#ef4444", f"평균보다 높음"
+        def _num_row(label, col, val, fmt_val, diff_unit="", pct_fmt=False):
+            avg_val  = df_data[col].mean()
+            diff_v   = val - avg_val
+            if pct_fmt:
+                diff_str = f"{diff_v*100:+.1f}%p"
+            elif abs(diff_v) >= 1000:
+                diff_str = f"{diff_v:+,.0f}{diff_unit}"
             else:
-                icon, clr, note = "▼", "#22c55e", f"평균보다 낮음"
+                diff_str = f"{diff_v:+.1f}{diff_unit}"
+            if abs(diff_v) < avg_val * 0.02:
+                icon, clr, note = "━", "#94a3b8", f"평균 수준 ({diff_str})"
+            elif diff_v > 0:
+                icon, clr, note = "▲", "#ef4444", diff_str
+            else:
+                icon, clr, note = "▼", "#22c55e", diff_str
             return f"""<tr>
                 <td style="padding:4px 8px;opacity:0.65;font-size:0.77rem;">{label}</td>
                 <td style="padding:4px 8px;font-weight:700;font-size:0.82rem;">{fmt_val}</td>
@@ -275,16 +281,16 @@ def show_result_modal(rate: float, loan_grade: str, inputs: dict):
             </tr>"""
 
         rows_html = (
-            _num_row("나이",       "person_age",               inputs["person_age"],               f"{inputs['person_age']:.0f}세")
-          + _num_row("연소득",     "person_income",            inputs["person_income"],            f"{inputs['person_income']:,.0f}달러")
-          + _cat_row("주거형태",   "person_home_ownership",    inputs["person_home_ownership"])
-          + _num_row("재직기간",   "person_emp_length",        inputs["person_emp_length"],        f"{inputs['person_emp_length']:.1f}년")
-          + _cat_row("대출목적",   "loan_intent",              inputs["loan_intent"])
-          + _cat_row("대출등급",   "loan_grade",               inputs["loan_grade"])
-          + _num_row("대출금액",   "loan_amnt",                inputs["loan_amnt"],                f"{inputs['loan_amnt']:,.0f}달러")
-          + _num_row("소득대비",   "loan_percent_income",      inputs["loan_percent_income"],      f"{inputs['loan_percent_income']:.1%}")
-          + _cat_row("부도이력",   "cb_person_default_on_file",inputs["cb_person_default_on_file"])
-          + _num_row("신용이력",   "cb_person_cred_hist_length",inputs["cb_person_cred_hist_length"],f"{inputs['cb_person_cred_hist_length']:.0f}년")
+            _num_row("나이",     "person_age",                inputs["person_age"],               f"{inputs['person_age']:.0f}세",      "세")
+          + _num_row("연소득",   "person_income",             inputs["person_income"],            f"{inputs['person_income']:,.0f}달러", "달러")
+          + _cat_row("주거형태", "person_home_ownership",     inputs["person_home_ownership"])
+          + _num_row("재직기간", "person_emp_length",         inputs["person_emp_length"],        f"{inputs['person_emp_length']:.1f}년","년")
+          + _cat_row("대출목적", "loan_intent",               inputs["loan_intent"])
+          + _cat_row("대출등급", "loan_grade",                inputs["loan_grade"])
+          + _num_row("대출금액", "loan_amnt",                 inputs["loan_amnt"],                f"{inputs['loan_amnt']:,.0f}달러",     "달러")
+          + _num_row("소득대비", "loan_percent_income",       inputs["loan_percent_income"],      f"{inputs['loan_percent_income']:.1%}", "", True)
+          + _cat_row("부도이력", "cb_person_default_on_file", inputs["cb_person_default_on_file"])
+          + _num_row("신용이력", "cb_person_cred_hist_length",inputs["cb_person_cred_hist_length"],f"{inputs['cb_person_cred_hist_length']:.0f}년","년")
         )
 
         st.markdown(f"""
