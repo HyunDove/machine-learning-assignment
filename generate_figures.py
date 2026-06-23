@@ -185,6 +185,56 @@ def main():
     mae_dep  = float(mean_absolute_error(y_test, y_pred))
     print(f'회귀 배포 모델: RMSE={rmse_dep:.4f}  MAE={mae_dep:.4f}  R2={r2_dep:.4f}')
 
+    # ── 개별 변수 분포 이미지 (11a~11h) ─────────────────────────────────
+    print('\n[개별 분포] 수치형 6개 + 범주형 2개 저장...')
+    df_all = pd.read_csv(DATA_PATH)
+
+    # 수치형: 히스토그램 + 평균선
+    numeric_vars = [
+        ('person_age',                '나이 (세)',       '11a_dist_person_age.png'),
+        ('person_income',             '연소득 (달러)',    '11b_dist_person_income.png'),
+        ('person_emp_length',         '재직기간 (년)',    '11c_dist_person_emp_length.png'),
+        ('loan_amnt',                 '대출금액 (달러)', '11d_dist_loan_amnt.png'),
+        ('loan_percent_income',       '소득대비비율',     '11e_dist_loan_percent_income.png'),
+        ('cb_person_cred_hist_length','신용이력 (년)',    '11f_dist_cred_hist_length.png'),
+    ]
+    for col, title, fname in numeric_vars:
+        mean_val = df_all[col].mean()
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.hist(df_all[col].dropna(), bins=40, color='#4C72B0', edgecolor='white', linewidth=0.3)
+        ax.axvline(mean_val, color='red', linestyle='--', lw=1.5, label=f'평균 {mean_val:.1f}')
+        ax.set_title(title, fontsize=13, fontweight='bold')
+        ax.set_xlabel(title)
+        ax.set_ylabel('빈도')
+        ax.legend(fontsize=9)
+        plt.tight_layout()
+        savefig(fname)
+
+    # 범주형: 막대그래프 (원본 라벨 복원)
+    intent_map    = {0: 'DEBT', 1: 'EDUCATION', 2: 'HOME', 3: 'MEDICAL', 4: 'PERSONAL', 5: 'VENTURE'}
+    grade_map     = {0: 'A', 1: 'B', 2: 'C', 3: 'D', 4: 'E', 5: 'F', 6: 'G'}
+    intent_colors = ['#4C72B0', '#55A868', '#C44E52', '#8172B2', '#CCB974', '#64B5CD']
+    grade_colors  = ['#2ecc71', '#27ae60', '#f1c40f', '#e67e22', '#e74c3c', '#c0392b', '#8e44ad']
+
+    for col, label_map, colors, title, fname in [
+        ('loan_intent', intent_map, intent_colors, '대출 목적 분포', '11g_dist_loan_intent.png'),
+        ('loan_grade',  grade_map,  grade_colors,  '대출 등급 분포', '11h_dist_loan_grade.png'),
+    ]:
+        counts = df_all[col].value_counts().sort_index()
+        labels = [label_map.get(k, str(k)) for k in counts.index]
+        fig, ax = plt.subplots(figsize=(8, 4))
+        bars = ax.bar(labels, counts.values, color=colors[:len(labels)], edgecolor='white')
+        for bar, v in zip(bars, counts.values):
+            ax.text(bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + counts.values.max() * 0.01,
+                    f'{v:,}', ha='center', fontsize=9)
+        ax.set_title(title, fontsize=13, fontweight='bold')
+        ax.set_ylabel('빈도')
+        plt.tight_layout()
+        savefig(fname)
+
+    print('개별 분포 이미지 저장 완료 (11a~11h)')
+
 
 if __name__ == '__main__':
     main()

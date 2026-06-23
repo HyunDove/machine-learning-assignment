@@ -169,6 +169,35 @@ EDA 단계에서 전체 입력 변수의 분포를 상세히 확인하였다.
 - **대출 목적**: 교육(EDUCATION)과 의료(MEDICAL) 목적 신청이 다수를 차지.
 - **대출 등급**: C등급이 가장 많으며, 우량(A·B) 및 불량(F·G) 양 극단은 상대적으로 적은 분포.
 
+#### ○ 주요 변수별 개별 분포
+
+> **이미지 생성 방법**
+> - **사용 라이브러리**: `matplotlib` · `pandas`
+> - **데이터 소스**: `data/processed/credit_risk_cleaned.csv` (전처리 완료 데이터, 29,459행)
+> - **생성 스크립트**: `generate_figures.py` — `main()` 함수 내 개별 분포 블록 (파일명 11a~11h)
+> - **수치형 6개**: `ax.hist()` 히스토그램(bins=40) + 평균선(`axvline`, 빨간 점선)
+> - **범주형 2개**: LabelEncoding 값(0~N)을 원본 라벨로 역매핑 후 `ax.bar()` 막대그래프
+
+##### 수치형 변수
+
+![나이 분포](figures/11a_dist_person_age.png)
+
+![연소득 분포](figures/11b_dist_person_income.png)
+
+![재직기간 분포](figures/11c_dist_person_emp_length.png)
+
+![대출금액 분포](figures/11d_dist_loan_amnt.png)
+
+![소득대비비율 분포](figures/11e_dist_loan_percent_income.png)
+
+![신용이력 분포](figures/11f_dist_cred_hist_length.png)
+
+##### 범주형 변수
+
+![대출 목적 분포](figures/11g_dist_loan_intent.png)
+
+![대출 등급 분포](figures/11h_dist_loan_grade.png)
+
 ---
 
 ## 3. 데이터 학습 및 모델 정의
