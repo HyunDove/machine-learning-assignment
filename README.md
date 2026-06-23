@@ -10,7 +10,7 @@
 |---|---|
 | 🎯 **주제** | 대출 금리 예측 모델 구현 |
 | 🔍 **문제 유형** | 회귀 (`loan_int_rate`) |
-| 📦 **라이브러리** | Python · scikit-learn 1.4.0 · Flask · Streamlit · Pydantic |
+| 📦 **라이브러리** | Python · scikit-learn 1.4.0 · Flask · Streamlit · Plotly · Pydantic |
 | 📊 **데이터** | Kaggle — Credit Risk Dataset (32,581행, 12컬럼) |
 | 📏 **평가지표** | RMSE, MAE, R² |
 | 🚀 **결과물** | Streamlit 웹앱 (Cloud 배포) + Flask REST API + Jupyter 노트북 4종 |
@@ -23,8 +23,8 @@
 
 | 탭 | 내용 |
 |---|---|
-| 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 실시간 출력 |
-| 📊 **모델 성능** | 4개 회귀 모델 RMSE·MAE·R² 비교 표 + 막대 그래프 |
+| 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 모달 출력 (등급 내 위치 비교 + 전체 입력값 10개 vs 데이터 평균 비교) |
+| 📊 **모델 성능** | 4개 회귀 모델 RMSE·MAE·R² 비교 표 + Plotly 막대 그래프 (다크/라이트 테마 자동 대응) |
 | 📈 **데이터 인사이트** | 등급·나이·소득·대출금액 등 변수별 평균 금리 시각화 |
 
 ---
@@ -68,7 +68,7 @@ ml_project/
 │
 └── 📂 reports/
     ├── AI개발_수행내역서.md         # 과제 보고서 (한국어)
-    └── figures/                    # 시각화 이미지 13종
+    └── figures/                    # 시각화 이미지 21종 (개별 변수 분포 11a~11h 포함)
 ```
 
 ---
@@ -253,9 +253,11 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 전처리 노트북 (`notebooks/02_preprocessing.ipynb`)
 - [x] 모델 학습 노트북 (`notebooks/03_modeling.ipynb`)
 - [x] 평가 노트북 (`notebooks/04_evaluation.ipynb`)
-- [x] 시각화 이미지 생성 (`reports/figures/` — 13종)
+- [x] 시각화 이미지 생성 (`reports/figures/` — 21종, 개별 변수 분포 11a~11h 추가)
 - [x] 과제 보고서 작성 (`reports/AI개발_수행내역서.md`)
 - [x] Streamlit 웹앱 3탭 구성 (`streamlit_app.py`)
 - [x] Streamlit Cloud 배포 (한글 폰트·버전 호환 처리)
+- [x] 예측 모달 개선 — 등급 내 금리 위치 비교 + 전체 입력값 10개 vs 데이터 평균 수치 비교
+- [x] Plotly 전환 — 다크/라이트 테마 자동 대응
 - [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)
 - [ ] HWP 보고서 최종 제출
