@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
 
 ROOT              = os.path.dirname(os.path.abspath(__file__))
@@ -39,14 +41,6 @@ def _set_korean_font():
 
 _set_korean_font()
 
-
-def _chart_text_color() -> str:
-    """다크/라이트 테마에 맞는 텍스트 색상 반환"""
-    try:
-        base = st.context.theme.base
-    except Exception:
-        base = st.get_option("theme.base") or "light"
-    return "white" if base == "dark" else "#333333"
 
 
 ENCODINGS = {
@@ -307,33 +301,34 @@ with tab2:
     st.divider()
 
     model_names = list(MODEL_RESULTS.keys())
-    base_colors = ["#94a3b8", "#94a3b8", "#667eea", "#764ba2"]
+    base_color = "#94a3b8"
+    best_color = "#f59e0b"
 
-    tc = _chart_text_color()
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4.2))
-    fig.patch.set_facecolor("none")
-
-    for ax, metric, lower in zip(axes, ["RMSE", "MAE", "R²"], [True, True, False]):
+    fig = make_subplots(
+        rows=1, cols=3,
+        subplot_titles=["RMSE (낮을수록 좋음)", "MAE (낮을수록 좋음)", "R² (높을수록 좋음)"],
+    )
+    for col, (metric, lower) in enumerate(zip(["RMSE", "MAE", "R²"], [True, True, False]), 1):
         vals   = [MODEL_RESULTS[m][metric] for m in model_names]
-        colors = list(base_colors)
         best   = int(np.argmin(vals)) if lower else int(np.argmax(vals))
-        colors[best] = "#f59e0b"
-        bars = ax.bar(model_names, vals, color=colors, width=0.55, edgecolor="white", linewidth=0.5)
-        ax.set_title(f"{metric}  ({'낮을수록 좋음' if lower else '높을수록 좋음'})",
-                     fontsize=11, fontweight="bold", pad=10, color=tc)
-        ax.patch.set_alpha(0)
-        ax.spines[["top", "right"]].set_visible(False)
-        ax.spines[["left", "bottom"]].set_color(tc)
-        ax.tick_params(colors=tc)
-        ax.set_xticklabels(model_names, rotation=15, ha="right", fontsize=9, color=tc)
-        for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.003,
-                    f"{v:.4f}", ha="center", fontsize=8.5, fontweight="bold", color=tc)
-
-    plt.suptitle("회귀 모델 성능 비교  (최우수 = 노란색 🥇)", fontsize=12, fontweight="bold", y=1.03, color=tc)
-    plt.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    plt.close()
+        colors = [best_color if i == best else base_color for i in range(len(vals))]
+        fig.add_trace(
+            go.Bar(
+                x=model_names, y=vals,
+                marker_color=colors,
+                text=[f"{v:.4f}" for v in vals],
+                textposition="outside",
+                showlegend=False,
+            ),
+            row=1, col=col,
+        )
+    fig.update_layout(
+        title_text="회귀 모델 성능 비교  (최우수 = 노란색 🥇)",
+        title_x=0.5,
+        height=420,
+        margin=dict(t=80, b=20),
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
     st.subheader("🏆 최종 채택 모델 — RandomForestRegressor")
@@ -362,20 +357,21 @@ with tab3:
         palette_grade = plt.cm.RdYlGn_r(np.linspace(0.15, 0.85, 7))
 
         def make_bar_chart(labels, values, color, ylabel="평균 금리 (%)"):
-            tc = _chart_text_color()
-            fig, ax = plt.subplots(figsize=(6, 3.8))
-            fig.patch.set_facecolor("none")
-            bars = ax.bar(labels, values, color=color, edgecolor="white", width=0.6,
-                          alpha=0.9 if isinstance(color, str) else 1.0)
-            ax.set_ylabel(ylabel, fontsize=10, color=tc)
-            ax.patch.set_alpha(0)
-            ax.spines[["top", "right"]].set_visible(False)
-            ax.spines[["left", "bottom"]].set_color(tc)
-            ax.tick_params(colors=tc)
-            for bar, val in zip(bars, values):
-                ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.08,
-                        f"{val:.2f}%", ha="center", fontsize=9, fontweight="bold", color=tc)
-            plt.tight_layout()
+            if isinstance(color, str):
+                bar_colors = color
+            else:
+                bar_colors = [f"rgb({int(c[0]*255)},{int(c[1]*255)},{int(c[2]*255)})" for c in color]
+            fig = go.Figure(go.Bar(
+                x=labels, y=values,
+                marker_color=bar_colors,
+                text=[f"{v:.2f}%" for v in values],
+                textposition="outside",
+            ))
+            fig.update_layout(
+                yaxis_title=ylabel,
+                height=340,
+                margin=dict(t=20, b=20, l=40, r=20),
+            )
             return fig
 
         # 행 1: 대출 등급 / 나이 구간
@@ -388,7 +384,7 @@ with tab3:
                 .mean().reindex(["A", "B", "C", "D", "E", "F", "G"])
             )
             fig = make_bar_chart(grade_avg.index.tolist(), grade_avg.values, palette_grade)
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             st.markdown("#### 🎂 나이 구간별 평균 금리")
@@ -397,7 +393,7 @@ with tab3:
                 labels=["18-24", "25-29", "30-34", "35-39", "40-49", "50+"], right=False)
             age_avg = df.groupby("age_group", observed=True)["loan_int_rate"].mean()
             fig = make_bar_chart(age_avg.index.astype(str).tolist(), age_avg.values, "#667eea")
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         # 행 2: 소득 구간 / 대출금액 구간
         col3, col4 = st.columns(2)
@@ -409,10 +405,7 @@ with tab3:
                 labels=["<$30K", "$30K-60K", "$60K-100K", "$100K-200K", ">$200K"], right=False)
             inc_avg = df.groupby("income_group", observed=True)["loan_int_rate"].mean()
             fig = make_bar_chart(inc_avg.index.astype(str).tolist(), inc_avg.values, "#764ba2")
-            ax = fig.axes[0]
-            ax.set_xticklabels(inc_avg.index.astype(str), rotation=15, ha="right", fontsize=9)
-            plt.tight_layout()
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         with col4:
             st.markdown("#### 💰 대출금액 구간별 평균 금리")
@@ -421,7 +414,7 @@ with tab3:
                 labels=["<$5K", "$5K-10K", "$10K-20K", ">$20K"], right=False)
             amnt_avg = df.groupby("amnt_group", observed=True)["loan_int_rate"].mean()
             fig = make_bar_chart(amnt_avg.index.astype(str).tolist(), amnt_avg.values, "#11998e")
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         # 행 3: 재직기간 / 신용이력
         col5, col6 = st.columns(2)
@@ -433,7 +426,7 @@ with tab3:
                 labels=["<2년", "2-4년", "5-9년", "10-19년", "20년+"], right=False)
             emp_avg = df.groupby("emp_group", observed=True)["loan_int_rate"].mean()
             fig = make_bar_chart(emp_avg.index.astype(str).tolist(), emp_avg.values, "#f59e0b")
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         with col6:
             st.markdown("#### 📅 신용이력 기간별 평균 금리")
@@ -442,7 +435,7 @@ with tab3:
                 labels=["<3년", "3-5년", "6-9년", "10-14년", "15년+"], right=False)
             cred_avg = df.groupby("cred_group", observed=True)["loan_int_rate"].mean()
             fig = make_bar_chart(cred_avg.index.astype(str).tolist(), cred_avg.values, "#c44e52")
-            st.pyplot(fig, use_container_width=True); plt.close()
+            st.plotly_chart(fig, use_container_width=True)
 
         # 요약 통계
         st.divider()
