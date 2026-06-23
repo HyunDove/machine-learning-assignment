@@ -1,5 +1,6 @@
 import os
 import sys
+import urllib.request
 import joblib
 import numpy as np
 import pandas as pd
@@ -13,6 +14,14 @@ ROOT              = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR         = os.path.join(ROOT, "models")
 RATE_MODEL_PATH   = os.path.join(MODEL_DIR, "loan_rate_model.pkl")
 PROCESSED_PATH    = os.path.join(ROOT, "data", "processed", "credit_risk_cleaned.csv")
+
+_RELEASE_BASE = (
+    "https://github.com/HyunDove/machine-learning-assignment"
+    "/releases/download/v1.0.0-models"
+)
+_MODEL_FILES = {
+    "loan_rate_model.pkl": RATE_MODEL_PATH,
+}
 
 
 def _set_korean_font():
@@ -72,12 +81,12 @@ MODEL_RESULTS = {
 def ensure_models():
     if os.path.exists(RATE_MODEL_PATH):
         return
-    # processed CSV는 git에 포함 — 전처리 생략하고 바로 학습
-    with st.spinner("⚙️ 모델 파일이 없어 자동으로 학습 중입니다... (최초 1회)"):
-        sys.path.insert(0, ROOT)
-        from ml.train import train
-        train()
-    st.success("✅ 모델 학습 완료!")
+    os.makedirs(MODEL_DIR, exist_ok=True)
+    with st.spinner("⬇️ 모델 파일을 GitHub Release에서 다운로드 중입니다..."):
+        for filename, dest in _MODEL_FILES.items():
+            url = f"{_RELEASE_BASE}/{filename}"
+            urllib.request.urlretrieve(url, dest)
+    st.success("✅ 모델 다운로드 완료!")
 
 
 @st.cache_resource
@@ -163,14 +172,52 @@ load_models()
 
 # ── 예측 결과 모달 ────────────────────────────────────────────────────────────
 
-@st.dialog("🔮 예측 결과", width="large")
+@st.dialog("🔮 예측 결과", width="small")
 def show_result_modal(rate: float, loan_grade: str):
+    # 가운데 정렬 래퍼
+    st.markdown("""
+    <style>
+        div[data-testid="stDialog"] > div { max-width: 480px !important; margin: auto; }
+    </style>""", unsafe_allow_html=True)
+
     st.markdown(f"""
     <div class="result-box">
         <div class="result-label">📈 예측 대출 금리</div>
         <div class="result-value">{rate}</div>
         <div class="result-unit">% per annum</div>
     </div>""", unsafe_allow_html=True)
+
+    # ── 등급 내 위치 비교 ──────────────────────────────────────────────────
+    df_data = load_data()
+    if df_data is not None:
+        grade_enc = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5, "G": 6}
+        grade_avg = df_data.groupby("loan_grade")["loan_int_rate"].mean()
+        avg = round(float(grade_avg.get(grade_enc[loan_grade], rate)), 2)
+        diff = round(rate - avg, 2)
+        if diff < 0:
+            arrow, color, label = "▼", "#22c55e", f"등급 평균보다 {abs(diff):.2f}%p 낮음"
+        elif diff > 0:
+            arrow, color, label = "▲", "#ef4444", f"등급 평균보다 {diff:.2f}%p 높음"
+        else:
+            arrow, color, label = "━", "#94a3b8", "등급 평균과 동일"
+
+        st.markdown(f"""
+        <div style="display:flex; justify-content:space-between; align-items:center;
+                    background:rgba(128,128,128,0.08); border-radius:10px;
+                    padding:12px 16px; margin:10px 0;">
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:0.75rem; opacity:0.6;">예측 금리</div>
+                <div style="font-size:1.4rem; font-weight:800;">{rate}%</div>
+            </div>
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:1.6rem; color:{color};">{arrow}</div>
+                <div style="font-size:0.72rem; color:{color}; font-weight:600;">{label}</div>
+            </div>
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:0.75rem; opacity:0.6;">{loan_grade}등급 평균</div>
+                <div style="font-size:1.4rem; font-weight:800;">{avg}%</div>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
     grade_comment = {
         "A": "🟢 최우량 등급 — 낮은 금리가 적용될 가능성이 높습니다.",
