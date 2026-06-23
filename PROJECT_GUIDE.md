@@ -103,7 +103,7 @@ def train()  # 학습 실행 → (regressor, X_test, y_test) 반환
 
 | 구분 | 알고리즘 | 예측 대상 | 저장 경로 |
 |------|---------|----------|----------|
-| 회귀 | RandomForestRegressor (n_estimators=100, max_depth=15, compress=3) | `loan_int_rate` — 대출 금리(%) | `models/loan_rate_model.pkl` |
+| 회귀 | RandomForestRegressor (n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1, compress=3) | `loan_int_rate` — 대출 금리(%) | `models/loan_rate_model.pkl` |
 
 **사용 피처 (10개):**
 
@@ -121,9 +121,9 @@ loan_percent_income, cb_person_default_on_file, cb_person_cred_hist_length
 
 | 지표 | 값 | 의미 |
 |------|----|------|
-| RMSE | 1.0224 | 예측 금리와 실제 금리의 평균 오차 (단위: %) |
-| MAE | 0.7946 | 절대 오차 평균 |
-| R² | 0.9013 | 분산의 90.1%를 설명 (1에 가까울수록 좋음) |
+| RMSE | 1.0017 | 예측 금리와 실제 금리의 평균 오차 (단위: %) |
+| MAE | 0.7826 | 절대 오차 평균 |
+| R² | 0.9053 | 분산의 90.5%를 설명 (1에 가까울수록 좋음) |
 
 > 이 수치가 `streamlit_app.py`의 `MODEL_RESULTS` 딕셔너리에 하드코딩되어 있습니다. 재학습해도 자동 반영되지 않으므로 수동 갱신이 필요합니다.
 
@@ -319,4 +319,4 @@ fonts-nanum    # Ubuntu 서버에 나눔 한글 폰트 설치
 
 ### Streamlit Cloud 첫 실행
 
-모델 pkl 파일이 git에 포함되어 있어 배포 후 재학습 없이 바로 예측이 가능합니다. `ensure_models()`는 pkl이 없을 때만 실행됩니다.
+`models/*.pkl`은 git에서 제외되어 있습니다(로컬 시연 전용). Streamlit Cloud에서는 `ensure_models()`가 자동으로 `preprocessing.py` → `train.py`를 실행해 pkl을 생성합니다.

@@ -64,8 +64,9 @@ def main():
         '릿지 회귀':        Ridge(alpha=1.0),
         '그래디언트 부스팅': GradientBoostingRegressor(n_estimators=200, random_state=SEED),
         '랜덤 포레스트':    RandomForestRegressor(
-                                n_estimators=100, max_depth=15,
-                                max_features='sqrt', random_state=SEED, n_jobs=-1),
+                                n_estimators=200, max_depth=15,
+                                max_features=0.5, min_samples_leaf=1,
+                                random_state=SEED, n_jobs=-1),
     }
     results = {}
     preds   = {}

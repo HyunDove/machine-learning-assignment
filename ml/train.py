@@ -27,9 +27,10 @@ def train():
     X_train, X_test, y_train, y_test = train_test_split(X, y_rate, test_size=0.2, random_state=42)
 
     regressor = RandomForestRegressor(
-        n_estimators=100,
+        n_estimators=200,
         max_depth=15,
-        max_features="sqrt",
+        max_features=0.5,
+        min_samples_leaf=1,
         random_state=42,
         n_jobs=-1,
     )

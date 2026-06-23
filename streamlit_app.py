@@ -58,8 +58,8 @@ FEATURES = [
 MODEL_RESULTS = {
     "선형 회귀":        {"RMSE": 1.1770, "MAE": 0.9173, "R²": 0.8692},
     "릿지 회귀":        {"RMSE": 1.1770, "MAE": 0.9173, "R²": 0.8692},
-    "그래디언트 부스팅": {"RMSE": 1.0090, "MAE": 0.7896, "R²": 0.9039},
-    "랜덤 포레스트":    {"RMSE": 1.0224, "MAE": 0.7946, "R²": 0.9013},
+    "그래디언트 부스팅": {"RMSE": 1.0093, "MAE": 0.7906, "R²": 0.9038},
+    "랜덤 포레스트":    {"RMSE": 1.0017, "MAE": 0.7826, "R²": 0.9053},
 }
 
 
@@ -327,11 +327,11 @@ with tab2:
 
     st.divider()
     st.subheader("🏆 최종 채택 모델 — RandomForestRegressor")
-    st.caption("n_estimators=100 · max_depth=15 · max_features=sqrt · compress=3")
+    st.caption("n_estimators=200 · max_depth=15 · max_features=0.5 · min_samples_leaf=1 · compress=3")
     m1, m2, m3 = st.columns(3)
-    m1.metric("📉 RMSE", "1.0224", delta="-0.1546 vs 선형회귀", delta_color="inverse")
-    m2.metric("📉 MAE",  "0.7946", delta="-0.1227 vs 선형회귀", delta_color="inverse")
-    m3.metric("📈 R²",   "0.9013", delta="+0.0321 vs 선형회귀")
+    m1.metric("📉 RMSE", "1.0017", delta="-0.1753 vs 선형회귀", delta_color="inverse")
+    m2.metric("📉 MAE",  "0.7826", delta="-0.1347 vs 선형회귀", delta_color="inverse")
+    m3.metric("📈 R²",   "0.9053", delta="+0.0361 vs 선형회귀")
 
 
 # ── Tab 3: 데이터 인사이트 ────────────────────────────────────────────────────

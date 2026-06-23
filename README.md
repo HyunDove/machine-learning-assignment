@@ -1,7 +1,6 @@
 # 💳 대출 금리 예측 머신러닝 과제
 
-> Kaggle **Credit Risk Dataset** 기반으로 대출 금리를 예측하는 회귀 모델과  
-> 대출 부도 여부를 예측하는 분류 모델을 구현한 머신러닝 과제입니다.
+> Kaggle **Credit Risk Dataset** 기반으로 대출 금리를 예측하는 회귀 모델을 구현한 머신러닝 과제입니다.
 
 ---
 
@@ -10,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 🎯 **주제** | 대출 금리 예측 모델 구현 |
-| 🔍 **문제 유형** | 회귀 (`loan_int_rate`) + 분류 (`loan_status`) |
+| 🔍 **문제 유형** | 회귀 (`loan_int_rate`) |
 | 📦 **라이브러리** | Python · scikit-learn 1.4.0 · Flask · Streamlit · Pydantic |
 | 📊 **데이터** | Kaggle — Credit Risk Dataset (32,581행, 12컬럼) |
 | 📏 **평가지표** | RMSE, MAE, R² |
@@ -24,7 +23,7 @@
 
 | 탭 | 내용 |
 |---|---|
-| 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 + 부도 확률 실시간 출력 |
+| 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 실시간 출력 |
 | 📊 **모델 성능** | 4개 회귀 모델 RMSE·MAE·R² 비교 표 + 막대 그래프 |
 | 📈 **데이터 인사이트** | 등급·나이·소득·대출금액 등 변수별 평균 금리 시각화 |
 
@@ -46,12 +45,11 @@ ml_project/
 │
 ├── 📂 ml/                          # ML 파이프라인
 │   ├── preprocessing.py            # 결측치·이상치 처리, LabelEncoding
-│   ├── train.py                    # 모델 학습 (회귀 + 분류)
+│   ├── train.py                    # 모델 학습 (RF 회귀, RandomizedSearchCV 튜닝)
 │   └── evaluate.py                 # RMSE, MAE, R² 평가
 │
-├── 📂 models/                      # 학습된 모델 파일 (git 추적, compress=3 무손실 압축)
-│   ├── loan_rate_model.pkl         # RandomForestRegressor n_estimators=100 (13.82MB)
-│   └── loan_status_model.pkl       # XGBClassifier n_estimators=100 (0.1MB)
+├── 📂 models/                      # 학습된 모델 파일 (로컬 시연용 — git 추적 제외)
+│   └── loan_rate_model.pkl         # RandomForestRegressor n_estimators=200 (compress=3)
 │
 ├── 📂 notebooks/                   # Jupyter 노트북 (순서대로 실행)
 │   ├── 01_eda.ipynb                # EDA — 결측치·분포·상관관계 탐색
@@ -79,7 +77,7 @@ ml_project/
 
 **Kaggle — [Credit Risk Dataset](https://www.kaggle.com/datasets/laotse/credit-risk-dataset)**
 
-### 입력 피처 (11개)
+### 입력 피처 (10개)
 
 | 컬럼명 | 설명 | 타입 |
 |---|---|---|
@@ -90,7 +88,6 @@ ml_project/
 | `loan_intent` | 대출 목적 | 범주 |
 | `loan_grade` | 대출 등급 (A~G) | 범주 |
 | `loan_amnt` | 대출 금액 (달러) | 수치 |
-| `loan_status` | 대출 상태 (0=정상, 1=부도) | 범주 |
 | `loan_percent_income` | 소득 대비 대출 비율 | 수치 |
 | `cb_person_default_on_file` | 과거 부도 이력 (Y/N) | 범주 |
 | `cb_person_cred_hist_length` | 신용 이력 기간 (연) | 수치 |
@@ -100,7 +97,6 @@ ml_project/
 | 컬럼명 | 설명 | 용도 |
 |---|---|---|
 | `loan_int_rate` | 대출 금리 (%) | 🔵 회귀 타겟 |
-| `loan_status` | 대출 부도 여부 | 🟠 분류 타겟 |
 
 ---
 
@@ -110,38 +106,27 @@ ml_project/
 
 | 모델 | R² | RMSE | MAE |
 |---|---|---|---|
-| 선형 회귀 | 0.8702 | 1.1725 | 0.9139 |
-| 릿지 회귀 | 0.8702 | 1.1725 | 0.9140 |
-| GradientBoostingRegressor | 0.9041 | 1.0079 | 0.7899 |
-| ✅ **RandomForestRegressor** | **0.9011** | **1.0235** | **0.7941** |
+| 선형 회귀 | 0.8692 | 1.1770 | 0.9173 |
+| 릿지 회귀 | 0.8692 | 1.1770 | 0.9173 |
+| GradientBoostingRegressor | 0.9038 | 1.0093 | 0.7906 |
+| ✅ **RandomForestRegressor (튜닝)** | **0.9053** | **1.0017** | **0.7826** |
 
-> 최종 배포 채택: **RandomForestRegressor** (n_estimators=100, max_depth=15, compress=3 → **13.82MB**)  
-> ※ 비교 실험 시 n_estimators=200 RF 성능(R²=0.9062)이 최우수였으나 파일 크기 초과로 하이퍼파라미터 조정 후 배포
-
-### 🟠 분류 — `loan_status` 예측
-
-| 모델 | AUC-ROC | Precision(부도) | Recall(부도) | F1(부도) |
-|---|---|---|---|---|
-| 로지스틱 회귀 | 0.8472 | — | — | — |
-| RandomForestClassifier | 0.9346 | — | — | — |
-| GradientBoostingClassifier | 0.9378 | — | — | — |
-| ✅ **XGBClassifier** | **0.9528** | — | — | — |
-
-> 최종 배포 채택: **XGBClassifier** (n_estimators=100, compress=3) → **0.1MB**
+> 최종 배포 채택: **RandomForestRegressor** (RandomizedSearchCV 튜닝: n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1, compress=3)  
+> `models/*.pkl`은 로컬 시연 전용으로 git 추적 제외 (`.gitignore`)
 
 ---
 
 ## 📈 평가 결과
 
-> **RandomForestRegressor** 기준 (n_estimators=100, max_depth=15, test set 20%, random_state=42)
+> **RandomForestRegressor** 기준 (n_estimators=200, max_depth=15, max_features=0.5, min_samples_leaf=1, test set 20%, random_state=42)
 
 | 지표 | 값 |
 |---|---|
-| 📉 **RMSE** | `1.0235` |
-| 📉 **MAE** | `0.7941` |
-| 📈 **R²** | `0.9011` |
+| 📉 **RMSE** | `1.0017` |
+| 📉 **MAE** | `0.7826` |
+| 📈 **R²** | `0.9053` |
 
-R² **0.90** — 모델이 대출 금리 분산의 90%를 설명합니다.
+R² **0.9053** — 모델이 대출 금리 분산의 90.5%를 설명합니다.
 
 ---
 
@@ -167,8 +152,9 @@ python ml/train.py
 python ml/evaluate.py
 ```
 
-> `models/*.pkl`과 `data/processed/*.csv`는 git에 포함되어 있으므로  
-> Streamlit 앱 실행 시 별도 학습 없이 바로 로드됩니다.
+> `models/*.pkl`은 git에서 제외되어 있습니다(로컬 시연 전용).  
+> pkl이 없으면 `ensure_models()`가 자동으로 전처리·학습을 실행합니다.  
+> `data/processed/*.csv`는 git에 포함되어 있으므로 별도 전처리 없이 바로 사용 가능합니다.
 
 ### 3️⃣ Jupyter 노트북 실행
 
@@ -204,7 +190,6 @@ curl -X POST http://localhost:5000/api/predictions/ \
     "loan_intent": "PERSONAL",
     "loan_grade": "C",
     "loan_amnt": 10000,
-    "loan_status": 0,
     "loan_percent_income": 0.15,
     "cb_person_default_on_file": "N",
     "cb_person_cred_hist_length": 5
@@ -214,9 +199,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
 **응답 예시:**
 ```json
 {
-  "loan_int_rate": 12.45,
-  "loan_status_prob": 0.21,
-  "loan_status_label": "정상"
+  "loan_int_rate": 12.45
 }
 ```
 
@@ -233,10 +216,10 @@ curl -X POST http://localhost:5000/api/predictions/ \
    결측치 제거 · 이상치 필터 · LabelEncoding → CSV 저장
      ↓
 🤖 모델 학습 (03_modeling.ipynb / ml/train.py)
-   RF 회귀 + RF 분류 → .pkl 저장 (compress=3)
+   RF 회귀 (RandomizedSearchCV 튜닝) → .pkl 저장 (compress=3)
      ↓
 📏 성능 평가 (04_evaluation.ipynb / ml/evaluate.py)
-   RMSE / MAE / R² / AUC-ROC
+   RMSE / MAE / R²
      ↓
          ┌──────────────────┬─────────────────┐
     🌐 Flask API        💻 Streamlit 웹앱   📊 시각화 보고서
@@ -252,7 +235,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
 |---|---|
 | `requirements.txt` | Python 패키지 (`scikit-learn==1.4.0` 고정 — pkl 역직렬화 버전 호환) |
 | `packages.txt` | OS 패키지 (`fonts-nanum` — 차트 한글 폰트) |
-| `models/*.pkl` | git 추적 — Cold Start 시 재학습 없이 즉시 로드 |
+| `models/*.pkl` | git 제외 (로컬 시연 전용) — Cloud에서는 `ensure_models()`가 자동 생성 |
 | `data/processed/*.csv` | git 추적 — 데이터 인사이트 탭 즉시 표시 |
 
 > `scikit-learn` 버전 불일치 시 `__pyx_unpickle AttributeError` 발생 → 반드시 버전 고정 필요
@@ -265,7 +248,7 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 프로젝트 구조 스캐폴딩
 - [x] 데이터 전처리 (`ml/preprocessing.py`)
 - [x] 모델 학습 (`ml/train.py`)
-- [x] 성능 평가 (`ml/evaluate.py`) — R² 0.9011
+- [x] 성능 평가 (`ml/evaluate.py`) — R² 0.9053 (RandomizedSearchCV 튜닝 RF)
 - [x] EDA Jupyter 노트북 (`notebooks/01_eda.ipynb`)
 - [x] 전처리 노트북 (`notebooks/02_preprocessing.ipynb`)
 - [x] 모델 학습 노트북 (`notebooks/03_modeling.ipynb`)
