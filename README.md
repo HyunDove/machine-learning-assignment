@@ -260,4 +260,4 @@ curl -X POST http://localhost:5000/api/predictions/ \
 - [x] 예측 모달 개선 — 등급 내 금리 위치 비교 + 전체 입력값 10개 vs 데이터 평균 수치 비교
 - [x] Plotly 전환 — 다크/라이트 테마 자동 대응
 - [x] Flask API 테스트 (`backend/tests/` — 6/6 PASS)
-- [ ] HWP 보고서 최종 제출
+- [x] HWP 보고서 최종 제출
