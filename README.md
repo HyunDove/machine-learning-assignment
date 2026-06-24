@@ -11,6 +11,13 @@
   </tr>
 </table>
 
+![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.4.0-F7931E?logo=scikitlearn&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-REST_API-000000?logo=flask&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-Cloud_배포-FF4B4B?logo=streamlit&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-Notebook_4종-F37626?logo=jupyter&logoColor=white)
+![R²](https://img.shields.io/badge/R²-0.9053-2ea44f)
+
 ---
 
 ## 🔗 바로가기
@@ -46,6 +53,16 @@
 | 🔮 **금리 예측** | 신청자 정보 입력 → 예측 금리 모달 출력 (등급 내 위치 비교 + 전체 입력값 10개 vs 데이터 평균 비교) |
 | 📊 **모델 성능** | 4개 회귀 모델 RMSE·MAE·R² 비교 표 + Plotly 막대 그래프 (다크/라이트 테마 자동 대응) |
 | 📈 **데이터 인사이트** | 등급·나이·소득·대출금액 등 변수별 평균 금리 시각화 |
+
+### 📸 스크린샷
+
+| 🔮 금리 예측 입력 | 🔮 예측 결과 모달 |
+|:---:|:---:|
+| ![금리 예측 탭](reports/figures/screenshot_tab1_prediction.png) | ![예측 결과 모달](reports/figures/screenshot_tab1_modal.png) |
+
+| 📊 모델 성능 비교 | 📈 데이터 인사이트 |
+|:---:|:---:|
+| ![모델 성능 탭](reports/figures/screenshot_tab2_model.png) | ![데이터 인사이트 탭](reports/figures/screenshot_tab3_insight.png) |
 
 ---
 
