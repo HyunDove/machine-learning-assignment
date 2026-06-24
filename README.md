@@ -166,6 +166,36 @@ R² **0.9053** — 모델이 대출 금리 분산의 90.5%를 설명합니다.
 
 ---
 
+## 📊 분석 결과 시각화
+
+### 1️⃣ EDA — 탐색적 데이터 분석
+
+| 결측치 현황 | 피처 간 상관관계 히트맵 |
+|:---:|:---:|
+| ![결측치](reports/figures/01_missing_values.png) | ![상관관계](reports/figures/02_correlation_heatmap.png) |
+
+| 대출 등급별 금리 분포 & 전체 금리 히스토그램 |
+|:---:|
+| ![피처 분포](reports/figures/03_feature_distribution.png) |
+
+### 2️⃣ 모델 학습 & 성능 비교
+
+| 회귀 모델별 성능 비교 (RMSE · MAE · R²) |
+|:---:|
+| ![모델 비교](reports/figures/08_model_comparison.png) |
+
+| 피처 중요도 (RandomForestRegressor) |
+|:---:|
+| ![피처 중요도](reports/figures/09_feature_importance.png) |
+
+### 3️⃣ 최종 모델 평가
+
+| 실제값 vs 예측값 (R² = 0.9053) | 잔차 분석 |
+|:---:|:---:|
+| ![실제 vs 예측](reports/figures/10_final_actual_vs_pred.png) | ![잔차 분석](reports/figures/13_residual_analysis.png) |
+
+---
+
 ## 💼 비즈니스 임팩트
 
 대출 금리 **1%p 차이**는 대출 금액 1만 달러 기준 연 **100달러**, 10만 달러 기준 연 **1,000달러**의 이자 차이를 만듭니다.
