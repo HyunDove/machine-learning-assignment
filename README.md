@@ -2,6 +2,15 @@
 
 > Kaggle **Credit Risk Dataset** 기반으로 대출 금리를 예측하는 회귀 모델을 구현한 머신러닝 과제입니다.
 
+<table>
+  <tr>
+    <td>📅 <b>기간</b></td>
+    <td>2026년 06월 17일(수) ~ 2026년 06월 24일(수)</td>
+    <td>👤 <b>팀원</b></td>
+    <td>1인 · 김승현</td>
+  </tr>
+</table>
+
 ---
 
 ## 🔗 바로가기
@@ -9,7 +18,7 @@
 | 구분 | 링크 |
 |---|---|
 | 🌐 **웹앱 (Streamlit)** | [shmlassignment.streamlit.app](https://shmlassignment.streamlit.app/) |
-| 📄 **과제 보고서 (PDF)** | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-report/_2026.Credit.Risk._.pdf) |
+| 📄 **과제 보고서 (PDF)** | [ML_Credit_Risk_Report_2026_KimSeunghyun.pdf](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-report/ML_Credit_Risk_Report_2026_KimSeunghyun.pdf) |
 | 🤖 **금리 예측 모델** (`loan_rate_model.pkl`) | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-models/loan_rate_model.pkl) |
 | 🤖 **연체 예측 모델** (`loan_status_model.pkl`) | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-models/loan_status_model.pkl) |
 
