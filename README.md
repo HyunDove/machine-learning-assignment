@@ -4,6 +4,17 @@
 
 ---
 
+## 🔗 바로가기
+
+| 구분 | 링크 |
+|---|---|
+| 🌐 **웹앱 (Streamlit)** | [shmlassignment.streamlit.app](https://shmlassignment.streamlit.app/) |
+| 📄 **과제 보고서 (PDF)** | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-report/_2026.Credit.Risk._.pdf) |
+| 🤖 **금리 예측 모델** (`loan_rate_model.pkl`) | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-models/loan_rate_model.pkl) |
+| 🤖 **연체 예측 모델** (`loan_status_model.pkl`) | [다운로드](https://github.com/HyunDove/machine-learning-assignment/releases/download/v1.0.0-models/loan_status_model.pkl) |
+
+---
+
 ## 📋 과제 개요
 
 | 항목 | 내용 |
