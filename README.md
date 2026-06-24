@@ -16,7 +16,6 @@
 ![Flask](https://img.shields.io/badge/Flask-REST_API-000000?logo=flask&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-Cloud_배포-FF4B4B?logo=streamlit&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook_4종-F37626?logo=jupyter&logoColor=white)
-![R²](https://img.shields.io/badge/R²-0.9053-2ea44f)
 
 ---
 
